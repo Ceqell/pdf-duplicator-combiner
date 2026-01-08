@@ -1,5 +1,5 @@
 <!--
-Copyright 2026 Khonthee Jaroensiriphan
+Copyright 2026 name
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ limitations under the License.
     <meta name="description" content="Duplicate and reorder PDF pages securely in your browser. No upload, no sign-up, works offline.">
     <meta name="theme-color" content="#2563eb">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script src="js/lucide.min.js"></script>
+    <script src="js/pdf-lib.min.js"></script>
+    <script src="js/pdf.min.js"></script>
+    <script src="js/Sortable.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -213,7 +213,7 @@ limitations under the License.
             </div>
 			<div class="p-2 border-t border-slate-200 bg-white text-center">
 			<p class="text-[10px] text-slate-400 leading-relaxed">
-				Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">Khonthee Jaroensiriphan</span> from Thailand 🇹🇭
+				Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">name</span> from country
 			</p>
 			</div>
             <div class="p-3 md:p-4 border-t border-slate-200 bg-slate-50">
@@ -274,8 +274,11 @@ limitations under the License.
     </template>
 
     <script>
+        if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
         lucide.createIcons();
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
         const { PDFDocument } = PDFLib;
 
         // State
