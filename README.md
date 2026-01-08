@@ -10,3 +10,5 @@ How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator/discuss
 Licensed under the Apache License Version 2.0. Learn more at [LICENSE.md](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file).
 
 Link: https://ceqell.github.io/pdf-duplicator/
+
+<sup>Beta version: https://github.com/Ceqell/pdf-duplicator/tree/main/beta</sup>
