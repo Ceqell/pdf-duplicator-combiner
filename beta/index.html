@@ -459,10 +459,10 @@ limitations under the License.
     if (!pdfJsDoc) return;
     const count = pdfJsDoc.numPages;
     
-    // Optional: Confirmation dialog (remove if you want instant adding)
+    // Optional: Confirmation dialog
     if (!confirm(`Add all ${count} pages to the queue?`)) return;
 
-    // Prevent double-clicking, but don't change the visual text/icon
+    // Prevent double-clicking
     els.addAllBtn.disabled = true;
 
     const BATCH_SIZE = 50;
@@ -493,24 +493,6 @@ limitations under the License.
     setTimeout(() => {
         els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
         els.addAllBtn.disabled = false; // Re-enable button
-    }, 50);
-}
-        
-        updateStats();
-        
-        // Yield to let the spinner spin
-        await new Promise(resolve => setTimeout(resolve, 0));
-    }
-
-    // 2. Finalize
-    // Render all icons at once now that the loop is done
-    lucide.createIcons();
-
-    // Scroll to bottom (wrapped in setTimeout to ensure layout is ready)
-    setTimeout(() => {
-        els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     }, 50);
 }
 
