@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PDF Duplicator - Secure & Offline</title>
+    
+    <meta name="description" content="Duplicate and reorder PDF pages securely in your browser. No upload, no sign-up, works offline.">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        /* Dragging Styles */
+        .sortable-ghost { opacity: 0.4; background: #e2e8f0; }
+        .sortable-drag { cursor: grabbing; opacity: 1; background: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: scale(1.02); }
+
+        .pdf-page-card:active { transform: scale(0.98); }
+        
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #2563eb;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-800 bg-slate-50">
+
+    <nav class="bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex justify-between items-center shadow-sm z-30 shrink-0">
+        <div class="flex items-center gap-2.5">
+            <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
+                <i data-lucide="layers" class="h-5 w-5"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg md:text-xl tracking-tight text-slate-900 leading-tight">PDF Duplicator</h1>
+                <div class="flex items-center gap-1 text-[10px] md:text-xs text-green-600 font-medium">
+                    <i data-lucide="shield-check" class="h-3 w-3"></i>
+                    <span>Client-Side Only</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+             <button onclick="resetApp()" class="hidden text-sm font-medium text-slate-500 hover:text-red-600 px-3 py-2 transition-colors" id="resetBtn">
+                Reset
+            </button>
+            <button id="downloadBtn" onclick="downloadPDF()" disabled class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base">
+                <i data-lucide="download" class="h-4 w-4"></i>
+                <span class="hidden md:inline">Download PDF</span>
+                <span class="md:hidden">Save</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        <div id="uploadOverlay" class="absolute inset-0 z-40 bg-slate-50 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+            <div class="max-w-md w-full text-center">
+                <div id="dropZone" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 md:p-12 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group">
+                    <div class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform">
+                        <i data-lucide="file-up" class="h-8 w-8"></i>
+                    </div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">Select PDF File</h2>
+                    <p class="text-slate-500 text-sm mb-6">Documents are processed locally on your device. No data is ever uploaded.</p>
+                    <button class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all w-full md:w-auto">
+                        Browse Files
+                    </button>
+                    <input type="file" id="fileInput" accept="application/pdf" class="hidden">
+                </div>
+                <p class="mt-8 text-xs text-slate-400">Works offline • Private • Free <br>Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">Khonthee Jaroensiriphan</span> from 🇹🇭</p>
+            </div>
+        </div>
+
+        <div id="loadingOverlay" class="hidden absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center">
+            <div class="text-center">
+                <div class="spinner mx-auto mb-4 border-t-blue-600 border-slate-200"></div>
+                <h3 class="text-lg font-semibold text-slate-800">Processing PDF</h3>
+                <p class="text-slate-500 text-sm mt-1" id="loadingText">Generating thumbnails...</p>
+            </div>
+        </div>
+
+        <div id="sourcePanel" class="hidden w-full md:w-7/12 lg:w-2/3 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100/50 flex flex-col h-[55%] md:h-full transition-opacity">
+            <div class="px-4 py-3 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-10">
+                <h2 class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
+                    <i data-lucide="grid" class="h-4 w-4 text-blue-500"></i>
+                    Source Pages
+                </h2>
+                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500" id="sourcePageCount"></span>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
+                <div class="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="sourceGrid"></div>
+            </div>
+        </div>
+
+        <div id="queuePanel" class="hidden w-full md:w-5/12 lg:w-1/3 bg-white flex flex-col h-[45%] md:h-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-xl z-20 relative">
+            <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                    <h2 class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
+                        <i data-lucide="list-ordered" class="h-4 w-4 text-green-600"></i>
+                        New Layout
+                    </h2>
+                    <p class="text-[10px] text-slate-400 hidden md:block">Drag items to reorder</p>
+                </div>
+                <button onclick="clearQueue()" class="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded transition-colors font-medium">Clear All</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-3 bg-white relative" id="queueContainer">
+                <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none p-6 text-center">
+                    <i data-lucide="arrow-up-circle" class="h-8 w-8 mb-2 md:hidden"></i>
+                    <i data-lucide="arrow-left-circle" class="h-8 w-8 mb-2 hidden md:block"></i>
+                    <p class="text-sm font-medium">Tap source pages to add them here</p>
+                </div>
+                <div class="space-y-2 pb-10" id="queueList"></div>
+            </div>
+			<div class="p-2 border-t border-slate-200 bg-white text-center">
+			<p class="text-[10px] text-slate-400 leading-relaxed">
+				Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">Khonthee Jaroensiriphan</span> from 🇹🇭
+			</p>
+			</div>
+            <div class="p-3 md:p-4 border-t border-slate-200 bg-slate-50">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-500">Total Pages:</span>
+                    <span id="totalNewPages" class="font-bold text-slate-900 text-base">0</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <template id="sourcePageTemplate">
+        <div class="pdf-page-card bg-white p-2 rounded-lg border border-slate-200 shadow-sm relative cursor-pointer hover:border-blue-400 transition-colors select-none">
+            <div class="aspect-[1/1.4] bg-slate-100 rounded border border-slate-100 mb-2 overflow-hidden relative">
+                <img class="w-full h-full object-contain pointer-events-none" src="" alt="">
+                <div class="absolute top-1 left-1 bg-slate-900/60 text-white text-[9px] px-1.5 rounded">P<span class="page-num"></span></div>
+            </div>
+            <div class="flex gap-1 h-7">
+                <input type="number" min="1" max="99" value="1" class="w-full text-center text-xs border border-slate-200 rounded focus:border-blue-500 outline-none copies-input bg-slate-50" onclick="event.stopPropagation()">
+                <button class="bg-blue-600 text-white px-2 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors add-btn flex items-center justify-center">
+                    <i data-lucide="plus" class="h-3 w-3"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="queueItemTemplate">
+        <div class="queue-item flex items-center gap-3 bg-white p-2 pr-3 rounded border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-300 group touch-manipulation">
+            <div class="cursor-grab text-slate-300 hover:text-slate-500 px-1">
+                <i data-lucide="grip-vertical" class="h-4 w-4"></i>
+            </div>
+            <div class="h-10 w-8 bg-slate-100 rounded border border-slate-100 overflow-hidden shrink-0">
+                <img class="w-full h-full object-contain pointer-events-none" src="">
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold text-slate-700">Page <span class="origin-num"></span></div>
+                <div class="text-[10px] text-slate-400 truncate">Original PDF</div>
+            </div>
+            <button class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors remove-btn">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+    </template>
+
+    <script>
+        lucide.createIcons();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const { PDFDocument } = PDFLib;
+
+        // State
+        let originalDocBytes = null;
+        let originalPdfDoc = null;
+        let pdfJsDoc = null;
+        let thumbnailBlobs = []; // Store blob URLs to revoke later
+        let queue = []; // { id, originalIndex }
+        let sortable = null;
+
+        // Elements
+        const els = {
+            dropZone: document.getElementById('dropZone'),
+            fileInput: document.getElementById('fileInput'),
+            uploadOverlay: document.getElementById('uploadOverlay'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            sourcePanel: document.getElementById('sourcePanel'),
+            queuePanel: document.getElementById('queuePanel'),
+            sourceGrid: document.getElementById('sourceGrid'),
+            queueList: document.getElementById('queueList'),
+            emptyState: document.getElementById('emptyState'),
+            totalNewPages: document.getElementById('totalNewPages'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            sourceCount: document.getElementById('sourcePageCount')
+        };
+
+        // Handlers
+        els.dropZone.addEventListener('click', () => els.fileInput.click());
+        els.dropZone.addEventListener('dragover', (e) => { e.preventDefault(); els.dropZone.classList.add('border-blue-500', 'bg-blue-50'); });
+        els.dropZone.addEventListener('dragleave', () => els.dropZone.classList.remove('border-blue-500', 'bg-blue-50'));
+        els.dropZone.addEventListener('drop', handleDrop);
+        els.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        function handleDrop(e) {
+            e.preventDefault();
+            els.dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        }
+
+        async function handleFile(file) {
+            if (!file || file.type !== 'application/pdf') return alert('Please upload a PDF file.');
+            
+            els.uploadOverlay.classList.add('hidden');
+            els.loadingOverlay.classList.remove('hidden');
+
+            try {
+                const buffer = await file.arrayBuffer();
+                originalDocBytes = buffer;
+                
+                // Load Docs
+                pdfJsDoc = await pdfjsLib.getDocument(buffer.slice(0)).promise;
+                originalPdfDoc = await PDFDocument.load(buffer);
+                
+                // Render UI
+                els.sourceCount.textContent = `${pdfJsDoc.numPages} pgs`;
+                await renderThumbnails();
+                
+                // Show App
+                els.loadingOverlay.classList.add('hidden');
+                els.sourcePanel.classList.remove('hidden');
+                els.queuePanel.classList.remove('hidden');
+                els.resetBtn.classList.remove('hidden');
+                
+                // Init Sortable
+                initSortable();
+
+            } catch (err) {
+                console.error(err);
+                alert('Error: ' + (err.message.includes('Password') ? 'PDF is password protected.' : 'File corrupted.'));
+                resetApp();
+            }
+        }
+
+        async function renderThumbnails() {
+            els.sourceGrid.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            
+            for (let i = 1; i <= pdfJsDoc.numPages; i++) {
+                const template = document.getElementById('sourcePageTemplate').content.cloneNode(true);
+                const pageIndex = i - 1;
+                
+                // Elements
+                const img = template.querySelector('img');
+                const pageNum = template.querySelector('.page-num');
+                const input = template.querySelector('.copies-input');
+                const card = template.querySelector('.pdf-page-card');
+                const btn = template.querySelector('.add-btn');
+
+                pageNum.textContent = i;
+                
+                // Action: Add to Queue
+                const add = () => {
+                    const count = parseInt(input.value) || 1;
+                    addToQueue(pageIndex, count);
+                    // Visual feedback
+                    card.classList.add('ring-2', 'ring-blue-500');
+                    setTimeout(() => card.classList.remove('ring-2', 'ring-blue-500'), 200);
+                };
+                
+                card.onclick = add;
+                btn.onclick = (e) => { e.stopPropagation(); add(); };
+
+                // Async Thumbnail Gen (Memory Efficient)
+                generateThumbnail(i).then(url => img.src = url);
+                
+                frag.appendChild(template);
+            }
+            els.sourceGrid.appendChild(frag);
+            lucide.createIcons();
+        }
+
+        async function generateThumbnail(num) {
+            const page = await pdfJsDoc.getPage(num);
+            const viewport = page.getViewport({ scale: 0.25 }); // Low res for speed
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            
+            return new Promise(resolve => {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    thumbnailBlobs.push({ index: num-1, url });
+                    resolve(url);
+                });
+            });
+        }
+
+        function addToQueue(originalIndex, count) {
+            for(let i=0; i<count; i++) {
+                const id = Date.now() + Math.random().toString(36).substr(2, 5);
+                queue.push({ id, originalIndex });
+                renderQueueItem(id, originalIndex);
+            }
+            updateStats();
+            // Scroll to bottom
+            els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
+        }
+
+        function renderQueueItem(id, originalIndex) {
+            const template = document.getElementById('queueItemTemplate').content.cloneNode(true);
+            const item = template.querySelector('.queue-item');
+            
+            item.dataset.id = id;
+            template.querySelector('.origin-num').textContent = originalIndex + 1;
+            
+            // Find thumbnail
+            const thumb = thumbnailBlobs.find(t => t.index === originalIndex);
+            if(thumb) template.querySelector('img').src = thumb.url;
+
+            template.querySelector('.remove-btn').onclick = () => {
+                item.remove();
+                updateQueueFromDOM();
+            };
+
+            els.queueList.appendChild(template);
+            lucide.createIcons();
+        }
+
+        function initSortable() {
+            if(sortable) sortable.destroy();
+            sortable = new Sortable(els.queueList, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                handle: '.queue-item', // Drag whole item
+                onEnd: updateQueueFromDOM
+            });
+        }
+
+        function updateQueueFromDOM() {
+            // Rebuild queue array based on DOM order
+            const newQueue = [];
+            document.querySelectorAll('.queue-item').forEach(el => {
+                const id = el.dataset.id;
+                const originalItem = queue.find(q => q.id === id);
+                if(originalItem) newQueue.push(originalItem);
+            });
+            queue = newQueue;
+            updateStats();
+        }
+
+        function updateStats() {
+            const count = queue.length;
+            els.totalNewPages.textContent = count;
+            els.downloadBtn.disabled = count === 0;
+            els.emptyState.classList.toggle('hidden', count > 0);
+        }
+
+        function clearQueue() {
+            if(!confirm('Clear all pages?')) return;
+            queue = [];
+            els.queueList.innerHTML = '';
+            updateStats();
+        }
+
+        async function downloadPDF() {
+            if(queue.length === 0) return;
+            
+            const btn = els.downloadBtn;
+            const initialText = btn.innerHTML;
+            btn.innerHTML = `<div class="spinner border-t-white w-4 h-4"></div>`;
+            btn.disabled = true;
+
+            try {
+                // 1. Create Doc
+                const newDoc = await PDFDocument.create();
+                
+                // 2. Copy Pages (Batch optimized)
+                const indices = queue.map(q => q.originalIndex);
+                // Note: copyPages can be heavy, but pdf-lib handles it reasonably well for <500 pages
+                const copiedPages = await newDoc.copyPages(originalPdfDoc, indices);
+                copiedPages.forEach(p => newDoc.addPage(p));
+
+                // 3. Save
+                const pdfBytes = await newDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `recompiled_${Date.now()}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+
+            } catch (e) {
+                console.error(e);
+                alert('Failed to generate PDF');
+            } finally {
+                btn.innerHTML = initialText;
+                btn.disabled = false;
+                lucide.createIcons(); // Re-init icons in button
+            }
+        }
+
+        function resetApp() {
+            // Cleanup Blobs
+            thumbnailBlobs.forEach(t => URL.revokeObjectURL(t.url));
+            thumbnailBlobs = [];
+            originalDocBytes = null;
+            originalPdfDoc = null;
+            pdfJsDoc = null;
+            queue = [];
+            
+            // UI Reset
+            els.sourceGrid.innerHTML = '';
+            els.queueList.innerHTML = '';
+            els.fileInput.value = '';
+            
+            els.sourcePanel.classList.add('hidden');
+            els.queuePanel.classList.add('hidden');
+            els.resetBtn.classList.add('hidden');
+            els.uploadOverlay.classList.remove('hidden');
+            els.loadingOverlay.classList.add('hidden');
+            
+            updateStats();
+        }
+    </script>
+</body>
+</html>
