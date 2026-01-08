@@ -1,8 +1,11 @@
 # pdf-duplicator
 
-How it works: https://github.com/Ceqell/pdf-duplicator/discussions/1 [^disclaimer]
+Simple .pdf page duplicator.
 
-[^disclaimer]: Disclaimer: It works offline-ish. It does use cdn links for its libraries so you'll need to load the page at least once with an internet connection, after that you should be set for that device running that operating system. If you don't like that download the .js libraries yourself and point the html files to the libraries yourself.
+How it works: https://github.com/Ceqell/pdf-duplicator/discussions/1 [^disclaimer] [^2]
+
+[^disclaimer]: This tool is designed for offline use but relies on external CDNs (Tailwind, Lucide, pdf-lib) for core functionality. 
+[^2]: Important: You must load the tool once while online to allow your browser to cache these libraries. Note that clearing your browser cache or using "Incognito" mode will remove these files. For 100% offline reliability, download the .js files and update the <script> tags to point to your local copies.
 
 Licensed under the Apache License Version 2.0. Learn more at [LICENSE.md](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file).
 
