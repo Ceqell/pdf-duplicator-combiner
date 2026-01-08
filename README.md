@@ -1,8 +1,8 @@
 # pdf-duplicator
 
-How it works: https://github.com/Ceqell/pdf-duplicator/discussions/1
+How it works: https://github.com/Ceqell/pdf-duplicator/discussions/1 [^disclaimer]
 
--# Disclaimer: It works offline-ish. It does use cdn links for its libraries so you'll need to load the page at least once with an internet connection, after that you should be set for that device running that operating system. If you don't like that download the .js libraries yourself and point the html files to the libraries yourself.
+[^disclaimer]: Disclaimer: It works offline-ish. It does use cdn links for its libraries so you'll need to load the page at least once with an internet connection, after that you should be set for that device running that operating system. If you don't like that download the .js libraries yourself and point the html files to the libraries yourself.
 
 Licensed under the Apache License Version 2.0. Learn more at [LICENSE.md](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file).
 
