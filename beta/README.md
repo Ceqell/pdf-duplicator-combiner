@@ -1,4 +1,4 @@
-# pdf-duplicator
+# pdf-duplicator [BETA CHANNEL]
 
 Beta channel. Expect bugs.
 ### Features
