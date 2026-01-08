@@ -253,10 +253,11 @@ limitations under the License.
     </template>
 
     <template id="queueItemTemplate">
-        <div class="queue-item flex items-center gap-3 bg-white p-2 pr-3 rounded border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-300 group touch-manipulation">
-            <div class="cursor-grab text-slate-300 hover:text-slate-500 px-1">
+        <div class="queue-item flex items-center gap-3 bg-white p-2 pr-3 rounded border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-300 group touch-manipulation"> 
+            <!-- Added 'drag-handle' class and 'p-2' for a bigger touch target -->
+            <div class="drag-handle cursor-grab text-slate-300 hover:text-slate-500 p-2 -ml-1 touch-none">
                 <i data-lucide="grip-vertical" class="h-4 w-4"></i>
-            </div>
+            </div> 
             <div class="h-10 w-8 bg-slate-100 rounded border border-slate-100 overflow-hidden shrink-0 relative group/thumb">
                 <img class="w-full h-full object-contain pointer-events-none" src="">
                 <div class="absolute inset-0 bg-black/20 hidden group-hover/thumb:flex items-center justify-center cursor-pointer preview-trigger">
@@ -633,7 +634,7 @@ limitations under the License.
                 animation: 150,
                 ghostClass: 'sortable-ghost',
                 dragClass: 'sortable-drag',
-                handle: '.queue-item',
+                handle: '.drag-handle',
                 onEnd: updateQueueFromDOM
             });
         }
@@ -688,7 +689,7 @@ limitations under the License.
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.0.1
+            v1.0.2
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
