@@ -4,10 +4,10 @@ Beta channel. Expect bugs.
 ### Features
 - Better viewing options
 - Improved performance, optimized some things
-- **Fully** offline functionality
+- **Full** offline functionality
 - Mostly stable
 
-Simple .pdf file page duplicator.
+Simple .pdf file page duplicator. No data is ever uploaded and is processed locally on device.
 
 How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator/discussions/1) [^disclaimer]
 
