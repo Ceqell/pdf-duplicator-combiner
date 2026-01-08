@@ -18,7 +18,7 @@ limitations under the License.
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PDF Duplicator - Secure & Offline</title>
     
     <meta name="description" content="Duplicate and reorder PDF pages securely in your browser. No upload, no sign-up, works offline.">
@@ -56,6 +56,10 @@ limitations under the License.
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Modal Transitions */
+        .modal-enter { opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 bg-slate-50">
@@ -112,13 +116,44 @@ limitations under the License.
             </div>
         </div>
 
+        <div id="previewModal" class="fixed inset-0 z-[60] bg-slate-900/95 backdrop-blur-sm flex flex-col modal-enter transition-all duration-200">
+            <div class="flex justify-between items-center p-4 text-white shrink-0">
+                <div class="font-medium text-lg">Page Preview <span id="previewPageNum" class="text-slate-400 text-sm ml-2"></span></div>
+                <div class="flex gap-2">
+                     <button onclick="closePreview()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 flex items-center justify-center overflow-auto p-4 relative" id="previewContainer">
+                 <div id="previewSpinner" class="spinner border-t-white absolute"></div>
+                 <canvas id="previewCanvas" class="shadow-2xl max-w-full max-h-full object-contain"></canvas>
+            </div>
+
+            <div class="p-4 flex justify-center gap-4 shrink-0 pb-8">
+                <button onclick="changePreviewPage(-1)" class="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors">
+                    <i data-lucide="chevron-left" class="h-6 w-6"></i>
+                </button>
+                <button onclick="changePreviewPage(1)" class="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors">
+                    <i data-lucide="chevron-right" class="h-6 w-6"></i>
+                </button>
+            </div>
+        </div>
+
         <div id="sourcePanel" class="hidden w-full md:w-7/12 lg:w-2/3 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100/50 flex flex-col h-[55%] md:h-full transition-opacity">
-            <div class="px-4 py-3 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-10">
-                <h2 class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
-                    <i data-lucide="grid" class="h-4 w-4 text-blue-500"></i>
-                    Source Pages
-                </h2>
-                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500" id="sourcePageCount"></span>
+            <div class="px-4 py-3 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <h2 class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
+                        <i data-lucide="grid" class="h-4 w-4 text-blue-500"></i>
+                        Source Pages
+                    </h2>
+                    <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500" id="sourcePageCount"></span>
+                </div>
+                <button onclick="addAllPages()" class="text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-blue-100">
+                    <i data-lucide="copy-plus" class="h-3.5 w-3.5"></i>
+                    Add All Pages
+                </button>
             </div>
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
                 <div class="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="sourceGrid"></div>
@@ -147,7 +182,7 @@ limitations under the License.
             </div>
 			<div class="p-2 border-t border-slate-200 bg-white text-center">
 			<p class="text-[10px] text-slate-400 leading-relaxed">
-				Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">Khonthee Jaroensiriphan</span> from 🇹🇭
+				Made and hosted for free at no additional cost for online and offline use with <span class="text-red-500">❤️</span> by <span class="font-semibold text-slate-600">name</span> from country
 			</p>
 			</div>
             <div class="p-3 md:p-4 border-t border-slate-200 bg-slate-50">
@@ -160,10 +195,13 @@ limitations under the License.
     </main>
 
     <template id="sourcePageTemplate">
-        <div class="pdf-page-card bg-white p-2 rounded-lg border border-slate-200 shadow-sm relative cursor-pointer hover:border-blue-400 transition-colors select-none">
+        <div class="pdf-page-card bg-white p-2 rounded-lg border border-slate-200 shadow-sm relative cursor-pointer hover:border-blue-400 transition-all select-none group">
             <div class="aspect-[1/1.4] bg-slate-100 rounded border border-slate-100 mb-2 overflow-hidden relative">
                 <img class="w-full h-full object-contain pointer-events-none" src="" alt="">
                 <div class="absolute top-1 left-1 bg-slate-900/60 text-white text-[9px] px-1.5 rounded">P<span class="page-num"></span></div>
+                <button class="preview-btn absolute top-1 right-1 bg-white/90 hover:bg-blue-600 hover:text-white text-slate-600 p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" title="Full Screen View">
+                    <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                </button>
             </div>
             <div class="flex gap-1 h-7">
                 <input type="number" min="1" max="99" value="1" class="w-full text-center text-xs border border-slate-200 rounded focus:border-blue-500 outline-none copies-input bg-slate-50" onclick="event.stopPropagation()">
@@ -179,8 +217,11 @@ limitations under the License.
             <div class="cursor-grab text-slate-300 hover:text-slate-500 px-1">
                 <i data-lucide="grip-vertical" class="h-4 w-4"></i>
             </div>
-            <div class="h-10 w-8 bg-slate-100 rounded border border-slate-100 overflow-hidden shrink-0">
+            <div class="h-10 w-8 bg-slate-100 rounded border border-slate-100 overflow-hidden shrink-0 relative group/thumb">
                 <img class="w-full h-full object-contain pointer-events-none" src="">
+                <div class="absolute inset-0 bg-black/20 hidden group-hover/thumb:flex items-center justify-center cursor-pointer preview-trigger">
+                     <i data-lucide="eye" class="h-4 w-4 text-white drop-shadow-md"></i>
+                </div>
             </div>
             <div class="flex-1 min-w-0">
                 <div class="text-xs font-bold text-slate-700">Page <span class="origin-num"></span></div>
@@ -204,6 +245,7 @@ limitations under the License.
         let thumbnailBlobs = []; // Store blob URLs to revoke later
         let queue = []; // { id, originalIndex }
         let sortable = null;
+        let currentPreviewIndex = 0;
 
         // Elements
         const els = {
@@ -219,7 +261,12 @@ limitations under the License.
             totalNewPages: document.getElementById('totalNewPages'),
             downloadBtn: document.getElementById('downloadBtn'),
             resetBtn: document.getElementById('resetBtn'),
-            sourceCount: document.getElementById('sourcePageCount')
+            sourceCount: document.getElementById('sourcePageCount'),
+            // Preview Elements
+            previewModal: document.getElementById('previewModal'),
+            previewCanvas: document.getElementById('previewCanvas'),
+            previewSpinner: document.getElementById('previewSpinner'),
+            previewPageNum: document.getElementById('previewPageNum')
         };
 
         // Handlers
@@ -228,6 +275,15 @@ limitations under the License.
         els.dropZone.addEventListener('dragleave', () => els.dropZone.classList.remove('border-blue-500', 'bg-blue-50'));
         els.dropZone.addEventListener('drop', handleDrop);
         els.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        // Keyboard Nav for Preview
+        document.addEventListener('keydown', (e) => {
+            if (els.previewModal.classList.contains('modal-active')) {
+                if (e.key === 'Escape') closePreview();
+                if (e.key === 'ArrowLeft') changePreviewPage(-1);
+                if (e.key === 'ArrowRight') changePreviewPage(1);
+            }
+        });
 
         function handleDrop(e) {
             e.preventDefault();
@@ -282,7 +338,8 @@ limitations under the License.
                 const pageNum = template.querySelector('.page-num');
                 const input = template.querySelector('.copies-input');
                 const card = template.querySelector('.pdf-page-card');
-                const btn = template.querySelector('.add-btn');
+                const addBtn = template.querySelector('.add-btn');
+                const previewBtn = template.querySelector('.preview-btn');
 
                 pageNum.textContent = i;
                 
@@ -295,8 +352,15 @@ limitations under the License.
                     setTimeout(() => card.classList.remove('ring-2', 'ring-blue-500'), 200);
                 };
                 
+                // Card click adds to queue
                 card.onclick = add;
-                btn.onclick = (e) => { e.stopPropagation(); add(); };
+                addBtn.onclick = (e) => { e.stopPropagation(); add(); };
+
+                // Action: Preview
+                previewBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openPreview(pageIndex);
+                };
 
                 // Async Thumbnail Gen (Memory Efficient)
                 generateThumbnail(i).then(url => img.src = url);
@@ -326,6 +390,66 @@ limitations under the License.
             });
         }
 
+        // --- NEW: Add All Pages Feature ---
+        function addAllPages() {
+            if(!pdfJsDoc) return;
+            const count = pdfJsDoc.numPages;
+            if(confirm(`Add all ${count} pages to the queue?`)) {
+                for(let i=0; i<count; i++) {
+                    addToQueue(i, 1);
+                }
+                // Scroll to bottom of queue
+                setTimeout(() => {
+                    els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
+                }, 50);
+            }
+        }
+
+        // --- NEW: Preview / Lightbox Logic ---
+        function openPreview(index) {
+            currentPreviewIndex = index;
+            els.previewModal.classList.remove('hidden');
+            // Force reflow for animation
+            void els.previewModal.offsetWidth; 
+            els.previewModal.classList.add('modal-active');
+            renderPreviewCanvas(index);
+        }
+
+        function closePreview() {
+            els.previewModal.classList.remove('modal-active');
+            setTimeout(() => {
+                els.previewModal.classList.add('hidden');
+            }, 200);
+        }
+
+        function changePreviewPage(delta) {
+            const newIndex = currentPreviewIndex + delta;
+            if (newIndex >= 0 && newIndex < pdfJsDoc.numPages) {
+                currentPreviewIndex = newIndex;
+                renderPreviewCanvas(newIndex);
+            }
+        }
+
+        async function renderPreviewCanvas(index) {
+            els.previewSpinner.style.display = 'block';
+            els.previewPageNum.textContent = `(${index + 1} of ${pdfJsDoc.numPages})`;
+            
+            const page = await pdfJsDoc.getPage(index + 1);
+            
+            // High quality scale based on screen width
+            const scale = window.innerWidth > 1000 ? 1.5 : 1.0; 
+            const viewport = page.getViewport({ scale: scale });
+            const canvas = els.previewCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            els.previewSpinner.style.display = 'none';
+        }
+
+
         function addToQueue(originalIndex, count) {
             for(let i=0; i<count; i++) {
                 const id = Date.now() + Math.random().toString(36).substr(2, 5);
@@ -333,8 +457,6 @@ limitations under the License.
                 renderQueueItem(id, originalIndex);
             }
             updateStats();
-            // Scroll to bottom
-            els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
         }
 
         function renderQueueItem(id, originalIndex) {
@@ -348,10 +470,20 @@ limitations under the License.
             const thumb = thumbnailBlobs.find(t => t.index === originalIndex);
             if(thumb) template.querySelector('img').src = thumb.url;
 
+            // Remove Action
             template.querySelector('.remove-btn').onclick = () => {
                 item.remove();
                 updateQueueFromDOM();
             };
+
+            // Preview Action (from queue)
+            const previewTrigger = template.querySelector('.preview-trigger');
+            if(previewTrigger) {
+                previewTrigger.onclick = (e) => {
+                    e.stopPropagation();
+                    openPreview(originalIndex);
+                };
+            }
 
             els.queueList.appendChild(template);
             lucide.createIcons();
@@ -408,7 +540,6 @@ limitations under the License.
                 
                 // 2. Copy Pages (Batch optimized)
                 const indices = queue.map(q => q.originalIndex);
-                // Note: copyPages can be heavy, but pdf-lib handles it reasonably well for <500 pages
                 const copiedPages = await newDoc.copyPages(originalPdfDoc, indices);
                 copiedPages.forEach(p => newDoc.addPage(p));
 
@@ -460,7 +591,6 @@ limitations under the License.
     </script>
 </body>
 </html>
-
 
 
 
