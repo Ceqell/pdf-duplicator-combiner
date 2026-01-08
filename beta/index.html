@@ -89,19 +89,6 @@ limitations under the License.
         }
     </style>
 </head>
-<div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono">
-    <div class="pointer-events-auto">
-        v1.0.0-mvp
-    </div>
-    
-    <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
-        Regular site: 
-        <a href="https://ceqell.github.io/pdf-duplicator" 
-           class="text-blue-600 hover:text-blue-800 underline transition-colors">
-           ceqell.github.io/pdf-duplicator
-        </a>
-    </div>
-</div>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 bg-slate-50">
 
     <nav class="bg-white border-b border-slate-200 px-4 md:px-6 py-3 flex justify-between items-center shadow-sm z-30 shrink-0">
@@ -473,36 +460,44 @@ limitations under the License.
             const count = pdfJsDoc.numPages;
             if (!confirm(`Add all ${count} pages to the queue?`)) return;
 
-            // UI Feedback
             const btn = els.addAllBtn;
             const originalText = btn.innerHTML;
             btn.innerHTML = `<div class="spinner border-t-blue-600 w-3 h-3"></div> Adding...`;
             btn.disabled = true;
 
             const BATCH_SIZE = 50;
-            
+    
+            // 1. Process in Batches
             for (let i = 0; i < count; i += BATCH_SIZE) {
-                // Process a batch
                 const limit = Math.min(i + BATCH_SIZE, count);
+        
+                // Use a DocumentFragment for better DOM performance
+                // (Optional optimization, but simply skipping icons is the main fix)
                 for (let j = i; j < limit; j++) {
-                    const id = Date.now() + Math.random().toString(36).substr(2, 5);
+                 const id = Date.now() + Math.random().toString(36).substr(2, 5);
                     queue.push({ id, originalIndex: j });
-                    // We render immediately to DOM here, but since it's inside a batched loop,
-                    // the user sees progress and the browser doesn't crash.
-                    renderQueueItem(id, j);
-                }
-                updateStats();
-                
-                // Yield to main thread to let UI update (spinner spin)
-                await new Promise(resolve => setTimeout(resolve, 0));
-            }
-
-            // Finish
-            els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            lucide.createIcons();
+            
+                    // PASS 'FALSE' HERE to skip icon rendering for this item
+                    renderQueueItem(id, j, false); 
         }
+        
+        updateStats();
+        
+        // Yield to let the spinner spin
+        await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    // 2. Finalize
+    // Render all icons at once now that the loop is done
+    lucide.createIcons();
+
+    // Scroll to bottom (wrapped in setTimeout to ensure layout is ready)
+    setTimeout(() => {
+        els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 50);
+}
 
         function addToQueue(originalIndex, count) {
             for(let i=0; i<count; i++) {
@@ -515,17 +510,18 @@ limitations under the License.
             els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
         }
 
-        function renderQueueItem(id, originalIndex) {
+        // Updated: Added 'renderIcons' parameter to prevent freezing during bulk adds
+        function renderQueueItem(id, originalIndex, renderIcons = true) {
             const template = document.getElementById('queueItemTemplate').content.cloneNode(true);
             const item = template.querySelector('.queue-item');
-            
+    
             item.dataset.id = id;
             template.querySelector('.origin-num').textContent = originalIndex + 1;
-            
+    
             const thumb = thumbnailBlobs.find(t => t.index === originalIndex);
             if(thumb) template.querySelector('img').src = thumb.url;
 
-            template.querySelector('.remove-btn').onclick = () => {
+                template.querySelector('.remove-btn').onclick = () => {
                 item.remove();
                 updateQueueFromDOM();
             };
@@ -535,12 +531,16 @@ limitations under the License.
                 previewTrigger.onclick = (e) => {
                     e.stopPropagation();
                     openPreview(originalIndex);
-                };
-            }
+        };
+    }
 
-            els.queueList.appendChild(template);
-            lucide.createIcons();
-        }
+    els.queueList.appendChild(template);
+    
+    // Only render icons if explicitly requested (default behavior)
+    if (renderIcons) {
+        lucide.createIcons();
+    }
+}
 
         // --- Download Optimization (Chunking) ---
         async function downloadPDF() {
@@ -685,5 +685,20 @@ limitations under the License.
             updateStats();
         }
     </script>
+
+    <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
+        <div class="pointer-events-auto">
+            v1.0.0-mvp
+        </div>
+        
+        <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
+            Regular site: 
+            <a href="https://ceqell.github.io/pdf-duplicator" 
+               class="text-blue-600 hover:text-blue-800 underline transition-colors">
+               ceqell.github.io/pdf-duplicator
+            </a>
+        </div>
+    </div>
+
 </body>
 </html>
