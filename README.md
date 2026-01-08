@@ -1,6 +1,6 @@
 # pdf-duplicator
 
-Simple .pdf page duplicator.
+Simple .pdf file page duplicator.
 
 How it works: https://github.com/Ceqell/pdf-duplicator/discussions/1 [^disclaimer] [^2]
 
