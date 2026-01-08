@@ -456,30 +456,45 @@ limitations under the License.
 
         // --- OPTIMIZED: Async Batch Adding ---
         async function addAllPages() {
-            if (!pdfJsDoc) return;
-            const count = pdfJsDoc.numPages;
-            if (!confirm(`Add all ${count} pages to the queue?`)) return;
-
-            const btn = els.addAllBtn;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<div class="spinner border-t-blue-600 w-3 h-3"></div> Adding...`;
-            btn.disabled = true;
-
-            const BATCH_SIZE = 50;
+    if (!pdfJsDoc) return;
+    const count = pdfJsDoc.numPages;
     
-            // 1. Process in Batches
-            for (let i = 0; i < count; i += BATCH_SIZE) {
-                const limit = Math.min(i + BATCH_SIZE, count);
-        
-                // Use a DocumentFragment for better DOM performance
-                // (Optional optimization, but simply skipping icons is the main fix)
-                for (let j = i; j < limit; j++) {
-                 const id = Date.now() + Math.random().toString(36).substr(2, 5);
-                    queue.push({ id, originalIndex: j });
+    // Optional: Confirmation dialog (remove if you want instant adding)
+    if (!confirm(`Add all ${count} pages to the queue?`)) return;
+
+    // Prevent double-clicking, but don't change the visual text/icon
+    els.addAllBtn.disabled = true;
+
+    const BATCH_SIZE = 50;
+    
+    // 1. Process in Batches
+    for (let i = 0; i < count; i += BATCH_SIZE) {
+        const limit = Math.min(i + BATCH_SIZE, count);
+
+        for (let j = i; j < limit; j++) {
+            const id = Date.now() + Math.random().toString(36).substr(2, 5);
+            queue.push({ id, originalIndex: j });
             
-                    // PASS 'FALSE' HERE to skip icon rendering for this item
-                    renderQueueItem(id, j, false); 
+            // Pass 'false' to skip icon rendering for speed
+            renderQueueItem(id, j, false); 
         }
+        
+        updateStats();
+        
+        // Yield to main thread so the browser doesn't freeze
+        await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    // 2. Finalize
+    // Render all icons once at the end
+    lucide.createIcons();
+
+    // Scroll to bottom
+    setTimeout(() => {
+        els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
+        els.addAllBtn.disabled = false; // Re-enable button
+    }, 50);
+}
         
         updateStats();
         
