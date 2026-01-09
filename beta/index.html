@@ -344,6 +344,11 @@ limitations under the License.
         }
 
         async function handleFiles(files) {
+            
+            if (sources.length > 10) {
+                if(!confirm("Loading many large PDFs might slow down your browser. Continue?")) return;
+            }
+
             if (!files || files.length === 0) return;
 
             els.uploadOverlay.classList.add('hidden');
@@ -420,7 +425,7 @@ limitations under the License.
             const header = document.createElement('div');
             // Removed 'sticky top-0 bg-slate-50/95 backdrop-blur z-10'
             header.className = 'col-span-full flex items-center gap-2 py-3 px-1 mt-4 border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase tracking-wider bg-slate-50';
-            header.innerHTML = `<i data-lucide="file-text" class="h-4 w-4"></i> ${source.name} <span class="ml-auto font-mono bg-slate-200 px-2 rounded">${source.pageCount} pgs</span>`;header.cl
+            header.innerHTML = `<i data-lucide="file-text" class="h-4 w-4"></i> ${source.name} <span class="ml-auto font-mono bg-slate-200 px-2 rounded">${source.pageCount} pgs</span>`;
             els.sourceGrid.appendChild(header);
 
             const frag = document.createDocumentFragment();
