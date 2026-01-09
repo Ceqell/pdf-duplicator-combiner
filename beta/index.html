@@ -344,7 +344,7 @@ limitations under the License.
         }
 
         async function handleFiles(files) {
-            
+
             if (sources.length > 10) {
                 if(!confirm("Loading many large PDFs might slow down your browser. Continue?")) return;
             }
@@ -482,6 +482,7 @@ limitations under the License.
                 observer.observe(card);
             }
             els.sourceGrid.appendChild(frag);
+            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
             lucide.createIcons();
         }
 
