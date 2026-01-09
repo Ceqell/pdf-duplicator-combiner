@@ -1,12 +1,12 @@
 # pdf-duplicator
 
-### Features
+### Latest changelogs
 - Better viewing options
 - Improved performance, optimized some things
 - **Full** offline functionality
 - Fully stable
 
-Simple .pdf file page duplicator. No data is ever uploaded and is processed locally on device.
+Simple, lightweight .pdf file page duplicator. No data is ever uploaded and is processed locally on device.
 
 How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator/discussions/1) [^disclaimer] [^2]
 
