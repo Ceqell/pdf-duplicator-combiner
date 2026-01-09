@@ -13,7 +13,7 @@ How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator/discuss
 [^disclaimer]: Fully offline capable. Installable as a PWA.
 [^2]: Beta branch: https://github.com/Ceqell/pdf-duplicator/tree/main/beta
 
-Licensed under the Apache License Version 2.0. Learn more at [LICENSE.md](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file).
+Licensed under the Apache License Version 2.0. Learn more at the [LICENSE](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file) file.
 
 Link: https://ceqell.github.io/pdf-duplicator
 
