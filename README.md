@@ -1,11 +1,10 @@
-# pdf-duplicator [BETA CHANNEL]
+# pdf-duplicator
 
-Beta channel. Expect bugs.
 ### Features
 - Better viewing options
 - Improved performance, optimized some things
 - **Full** offline functionality
-- Mostly stable
+- Fully stable
 
 Simple .pdf file page duplicator. No data is ever uploaded and is processed locally on device.
 

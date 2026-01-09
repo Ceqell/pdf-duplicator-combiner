@@ -129,7 +129,7 @@ limitations under the License.
                     <button class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all w-full md:w-auto">
                         Browse Files
                     </button>
-                    <input type="file" id="fileInput" accept="application/pdf" class="hidden">
+                    <input type="file" id="fileInput" accept="application/pdf" class="hidden" multiple>
                 </div>
                 <p class="mt-8 text-xs text-slate-400">Works offline • Private • Free <br>Made and hosted for free at no additional cost for online and offline use.<br><a href="https://github.com/Ceqell/pdf-duplicator">https://github.com/Ceqell/pdf-duplicator</a><br>Licensed under the Apache License 2.0</p>
             </div>
@@ -177,6 +177,12 @@ limitations under the License.
                 </div>
                 
                 <div class="flex gap-2">
+                    <!-- NEW BUTTON START -->
+                    <button onclick="document.getElementById('fileInput').click()" class="text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-slate-200">
+                        <i data-lucide="folder-plus" class="h-3.5 w-3.5"></i>
+                            Add PDF
+                    </button>
+                    <!-- NEW BUTTON END -->
                     <button onclick="toggleView()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded border border-transparent hover:border-slate-200 transition-colors" title="Toggle List/Grid View">
                         <i id="viewIcon" data-lucide="list" class="h-4 w-4"></i>
                     </button>
@@ -266,7 +272,7 @@ limitations under the License.
             </div>
             <div class="flex-1 min-w-0">
                 <div class="text-xs font-bold text-slate-700">Page <span class="origin-num"></span></div>
-                <div class="text-[10px] text-slate-400 truncate">Original PDF</div>
+                <div class="text-[10px] text-slate-400 truncate file-name">Original PDF</div>
             </div>
             <button class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors remove-btn">
                 <i data-lucide="x" class="h-4 w-4"></i>
@@ -276,20 +282,18 @@ limitations under the License.
 
     <script>
         if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
+            navigator.serviceWorker.register('sw.js');
+        }
         lucide.createIcons();
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
         const { PDFDocument } = PDFLib;
 
         // State
-        let originalDocBytes = null;
-        let originalPdfDoc = null;
-        let pdfJsDoc = null;
-        let thumbnailBlobs = [];
+        let sources = []; // Array of { id, name, pdfDoc, pdfJsDoc }
         let queue = [];
         let sortable = null;
         let currentPreviewIndex = 0;
+        let currentPreviewSourceId = null;
         let observer = null;
         let isListView = false;
 
@@ -322,11 +326,12 @@ limitations under the License.
         els.dropZone.addEventListener('dragover', (e) => { e.preventDefault(); els.dropZone.classList.add('border-blue-500', 'bg-blue-50'); });
         els.dropZone.addEventListener('dragleave', () => els.dropZone.classList.remove('border-blue-500', 'bg-blue-50'));
         els.dropZone.addEventListener('drop', handleDrop);
-        els.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        els.fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
         document.addEventListener('keydown', (e) => {
             if (els.previewModal.classList.contains('modal-active')) {
                 if (e.key === 'Escape') closePreview();
+                // Simple navigation for preview (stays within same source)
                 if (e.key === 'ArrowLeft') changePreviewPage(-1);
                 if (e.key === 'ArrowRight') changePreviewPage(1);
             }
@@ -335,43 +340,69 @@ limitations under the License.
         function handleDrop(e) {
             e.preventDefault();
             els.dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
         }
 
-        async function handleFile(file) {
-            if (!file || file.type !== 'application/pdf') return alert('Please upload a PDF file.');
-            
+        async function handleFiles(files) {
+            if (!files || files.length === 0) return;
+
             els.uploadOverlay.classList.add('hidden');
             els.loadingOverlay.classList.remove('hidden');
+            els.loadingText.textContent = `Processing ${files.length} file(s)...`;
 
-            try {
-                const buffer = await file.arrayBuffer();
-                originalDocBytes = buffer;
-                
-                pdfJsDoc = await pdfjsLib.getDocument(buffer.slice(0)).promise;
-                originalPdfDoc = await PDFDocument.load(buffer);
-                
-                els.sourceCount.textContent = `${pdfJsDoc.numPages} pgs`;
-                await renderThumbnails();
-                
-                els.loadingOverlay.classList.add('hidden');
-                els.sourcePanel.classList.remove('hidden');
-                els.queuePanel.classList.remove('hidden');
-                els.resetBtn.classList.remove('hidden');
-                
-                initSortable();
+            // Process sequentially to keep order
+            for (const file of files) {
+                if (file.type !== 'application/pdf') continue;
 
-            } catch (err) {
-                console.error(err);
-                alert('Error: ' + (err.message.includes('Password') ? 'PDF is password protected.' : 'File corrupted.'));
-                resetApp();
+                try {
+                    const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    const buffer = await file.arrayBuffer();
+                    
+                    // Load into PDF.js (for viewing)
+                    const pdfJsDoc = await pdfjsLib.getDocument(buffer.slice(0)).promise;
+                    
+                    // Load into PDF-Lib (for manipulation)
+                    const pdfDoc = await PDFDocument.load(buffer);
+
+                    const source = {
+                        id,
+                        name: file.name,
+                        pdfDoc,
+                        pdfJsDoc,
+                        pageCount: pdfJsDoc.numPages,
+                        thumbnails: {} // Cache thumbnails per source
+                    };
+
+                    sources.push(source);
+                    await renderSourceToGrid(source);
+
+                } catch (err) {
+                    console.error(err);
+                    alert(`Error loading ${file.name}: ` + err.message);
+                }
             }
+
+            updateTotalSourceCount();
+            
+            els.loadingOverlay.classList.add('hidden');
+            els.sourcePanel.classList.remove('hidden');
+            els.queuePanel.classList.remove('hidden');
+            els.resetBtn.classList.remove('hidden');
+            
+            // Re-init sortable to include new items if needed (mostly valid for queue)
+            initSortable();
+            
+            // Reset input so you can select the same file again if needed
+            els.fileInput.value = '';
+        }
+
+        function updateTotalSourceCount() {
+            const total = sources.reduce((acc, s) => acc + s.pageCount, 0);
+            els.sourceCount.textContent = `${total} pgs / ${sources.length} docs`;
         }
 
         function toggleView() {
             isListView = !isListView;
-            
-            // Toggle container classes
             if (isListView) {
                 els.sourceGrid.classList.remove('grid-cols-3', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5');
                 els.sourceGrid.classList.add('grid-cols-1', 'list-view');
@@ -384,29 +415,36 @@ limitations under the License.
             lucide.createIcons();
         }
 
-        async function renderThumbnails() {
-            els.sourceGrid.innerHTML = '';
+        async function renderSourceToGrid(source) {
+            // Add a Header for this file
+            const header = document.createElement('div');
+            header.className = 'col-span-full flex items-center gap-2 py-3 px-1 mt-4 border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase tracking-wider sticky top-0 bg-slate-50/95 backdrop-blur z-10';
+            header.innerHTML = `<i data-lucide="file-text" class="h-4 w-4"></i> ${source.name} <span class="ml-auto font-mono bg-slate-200 px-2 rounded">${source.pageCount} pgs</span>`;
+            els.sourceGrid.appendChild(header);
+
             const frag = document.createDocumentFragment();
 
-            if (observer) observer.disconnect();
+            // Intersection Observer for lazy loading thumbnails
+            if (!observer) {
+                observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const card = entry.target;
+                            const sId = card.dataset.sourceId;
+                            const pIdx = parseInt(card.dataset.pageIndex);
+                            const img = card.querySelector('img');
+                            
+                            generateThumbnail(sId, pIdx + 1).then(url => {
+                                img.src = url;
+                                img.classList.remove('opacity-0');
+                            });
+                            obs.unobserve(card);
+                        }
+                    });
+                }, { root: els.sourceContainer, rootMargin: '100px' });
+            }
 
-            observer = new IntersectionObserver((entries, obs) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const card = entry.target;
-                        const index = parseInt(card.dataset.index);
-                        const img = card.querySelector('img');
-                        
-                        generateThumbnail(index + 1).then(url => {
-                            img.src = url;
-                            img.classList.remove('opacity-0');
-                        });
-                        obs.unobserve(card);
-                    }
-                });
-            }, { root: els.sourceContainer, rootMargin: '100px' });
-
-            for (let i = 1; i <= pdfJsDoc.numPages; i++) {
+            for (let i = 1; i <= source.pageCount; i++) {
                 const template = document.getElementById('sourcePageTemplate').content.cloneNode(true);
                 const pageIndex = i - 1;
 
@@ -417,20 +455,22 @@ limitations under the License.
                 const addBtn = template.querySelector('.add-btn');
                 const previewBtn = template.querySelector('.preview-btn');
 
-                card.dataset.index = pageIndex;
+                card.dataset.sourceId = source.id;
+                card.dataset.pageIndex = pageIndex;
+                
                 pageNum.textContent = i;
                 pageNumText.textContent = i;
                 
                 const add = () => {
                     const count = parseInt(input.value) || 1;
-                    addToQueue(pageIndex, count);
+                    addToQueue(source.id, pageIndex, count);
                     card.classList.add('ring-2', 'ring-blue-500');
                     setTimeout(() => card.classList.remove('ring-2', 'ring-blue-500'), 200);
                 };
                 
                 card.onclick = add;
                 addBtn.onclick = (e) => { e.stopPropagation(); add(); };
-                previewBtn.onclick = (e) => { e.stopPropagation(); openPreview(pageIndex); };
+                previewBtn.onclick = (e) => { e.stopPropagation(); openPreview(source.id, pageIndex); };
 
                 frag.appendChild(template);
                 observer.observe(card);
@@ -439,8 +479,11 @@ limitations under the License.
             lucide.createIcons();
         }
 
-        async function generateThumbnail(num) {
-            const page = await pdfJsDoc.getPage(num);
+        async function generateThumbnail(sourceId, num) {
+            const source = sources.find(s => s.id === sourceId);
+            if (!source || source.thumbnails[num]) return source?.thumbnails[num];
+
+            const page = await source.pdfJsDoc.getPage(num);
             const viewport = page.getViewport({ scale: 0.25 }); 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -452,77 +495,73 @@ limitations under the License.
             return new Promise(resolve => {
                 canvas.toBlob(blob => {
                     const url = URL.createObjectURL(blob);
-                    thumbnailBlobs.push({ index: num-1, url });
+                    source.thumbnails[num] = url;
                     resolve(url);
                 });
             });
         }
 
-        // --- OPTIMIZED: Async Batch Adding ---
+        // --- Multi-Source Add All ---
         async function addAllPages() {
-    if (!pdfJsDoc) return;
-    const count = pdfJsDoc.numPages;
-    
-    // Optional: Confirmation dialog
-    if (!confirm(`Add all ${count} pages to the queue?`)) return;
-
-    // Prevent double-clicking
-    els.addAllBtn.disabled = true;
-
-    const BATCH_SIZE = 50;
-    
-    // 1. Process in Batches
-    for (let i = 0; i < count; i += BATCH_SIZE) {
-        const limit = Math.min(i + BATCH_SIZE, count);
-
-        for (let j = i; j < limit; j++) {
-            const id = Date.now() + Math.random().toString(36).substr(2, 5);
-            queue.push({ id, originalIndex: j });
+            if (sources.length === 0) return;
             
-            // Pass 'false' to skip icon rendering for speed
-            renderQueueItem(id, j, false); 
+            if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
+
+            els.addAllBtn.disabled = true;
+
+            for (const source of sources) {
+                const count = source.pageCount;
+                const BATCH_SIZE = 50;
+
+                for (let i = 0; i < count; i += BATCH_SIZE) {
+                    const limit = Math.min(i + BATCH_SIZE, count);
+                    for (let j = i; j < limit; j++) {
+                        const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                        const qItem = { id, sourceId: source.id, pageIndex: j };
+                        queue.push(qItem);
+                        renderQueueItem(qItem, false);
+                    }
+                    updateStats();
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            lucide.createIcons();
+            setTimeout(() => {
+                els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
+                els.addAllBtn.disabled = false;
+            }, 50);
         }
-        
-        updateStats();
-        
-        // Yield to main thread so the browser doesn't freeze
-        await new Promise(resolve => setTimeout(resolve, 0));
-    }
 
-    // 2. Finalize
-    // Render all icons once at the end
-    lucide.createIcons();
-
-    // Scroll to bottom
-    setTimeout(() => {
-        els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
-        els.addAllBtn.disabled = false; // Re-enable button
-    }, 50);
-}
-
-        function addToQueue(originalIndex, count) {
+        function addToQueue(sourceId, pageIndex, count) {
             for(let i=0; i<count; i++) {
-                const id = Date.now() + Math.random().toString(36).substr(2, 5);
-                queue.push({ id, originalIndex });
-                renderQueueItem(id, originalIndex);
+                const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                const qItem = { id, sourceId, pageIndex };
+                queue.push(qItem);
+                renderQueueItem(qItem);
             }
             updateStats();
-            // Scroll only if adding individual items (not batch)
             els.queueContainer.scrollTop = els.queueContainer.scrollHeight;
         }
 
-        // Updated: Added 'renderIcons' parameter to prevent freezing during bulk adds
-        function renderQueueItem(id, originalIndex, renderIcons = true) {
+        function renderQueueItem(qItem, renderIcons = true) {
             const template = document.getElementById('queueItemTemplate').content.cloneNode(true);
             const item = template.querySelector('.queue-item');
+            const source = sources.find(s => s.id === qItem.sourceId);
     
-            item.dataset.id = id;
-            template.querySelector('.origin-num').textContent = originalIndex + 1;
+            item.dataset.id = qItem.id;
+            template.querySelector('.origin-num').textContent = qItem.pageIndex + 1;
+            
+            // Update filename label
+            const fileLabel = template.querySelector('.file-name');
+            if (source) fileLabel.textContent = source.name;
     
-            const thumb = thumbnailBlobs.find(t => t.index === originalIndex);
-            if(thumb) template.querySelector('img').src = thumb.url;
+            // Set thumbnail
+            if(source && source.thumbnails[qItem.pageIndex + 1]) {
+                template.querySelector('img').src = source.thumbnails[qItem.pageIndex + 1];
+            }
 
-                template.querySelector('.remove-btn').onclick = () => {
+            template.querySelector('.remove-btn').onclick = () => {
                 item.remove();
                 updateQueueFromDOM();
             };
@@ -531,19 +570,15 @@ limitations under the License.
             if(previewTrigger) {
                 previewTrigger.onclick = (e) => {
                     e.stopPropagation();
-                    openPreview(originalIndex);
-        };
-    }
+                    openPreview(qItem.sourceId, qItem.pageIndex);
+                };
+            }
 
-    els.queueList.appendChild(template);
-    
-    // Only render icons if explicitly requested (default behavior)
-    if (renderIcons) {
-        lucide.createIcons();
-    }
-}
+            els.queueList.appendChild(template);
+            if (renderIcons) lucide.createIcons();
+        }
 
-        // --- Download Optimization (Chunking) ---
+        // --- Multi-Source Download Logic ---
         async function downloadPDF() {
             if(queue.length === 0) return;
             
@@ -555,17 +590,32 @@ limitations under the License.
             try {
                 const newDoc = await PDFDocument.create();
                 
-                // Chunk Processing for Download
-                const indices = queue.map(q => q.originalIndex);
-                const chunkSize = 50;
-                
-                for (let i = 0; i < indices.length; i += chunkSize) {
-                    const chunk = indices.slice(i, i + chunkSize);
-                    const copiedPages = await newDoc.copyPages(originalPdfDoc, chunk);
-                    copiedPages.forEach(p => newDoc.addPage(p));
-                    // Yield
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                // Group contiguous pages from the same source to optimize copying
+                // This is a big performance boost over copying one by one
+                let currentChunk = [];
+                let currentSourceId = null;
+
+                const processChunk = async () => {
+                    if (currentChunk.length === 0) return;
+                    
+                    const source = sources.find(s => s.id === currentSourceId);
+                    if (source) {
+                        const copiedPages = await newDoc.copyPages(source.pdfDoc, currentChunk);
+                        copiedPages.forEach(p => newDoc.addPage(p));
+                    }
+                    currentChunk = [];
+                };
+
+                for (const item of queue) {
+                    // If source changes, process the previous chunk
+                    if (item.sourceId !== currentSourceId) {
+                        await processChunk();
+                        currentSourceId = item.sourceId;
+                    }
+                    currentChunk.push(item.pageIndex);
                 }
+                // Process final chunk
+                await processChunk();
 
                 const pdfBytes = await newDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -573,7 +623,7 @@ limitations under the License.
                 
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `recompiled_${Date.now()}.pdf`;
+                link.download = `combined_${Date.now()}.pdf`;
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -581,7 +631,7 @@ limitations under the License.
 
             } catch (e) {
                 console.error(e);
-                alert('Failed to generate PDF');
+                alert('Failed to generate PDF: ' + e.message);
             } finally {
                 btn.innerHTML = initialText;
                 btn.disabled = false;
@@ -590,12 +640,13 @@ limitations under the License.
         }
 
         // --- Preview Logic ---
-        function openPreview(index) {
+        function openPreview(sourceId, index) {
+            currentPreviewSourceId = sourceId;
             currentPreviewIndex = index;
             els.previewModal.classList.remove('hidden');
             void els.previewModal.offsetWidth; 
             els.previewModal.classList.add('modal-active');
-            renderPreviewCanvas(index);
+            renderPreviewCanvas();
         }
 
         function closePreview() {
@@ -604,18 +655,24 @@ limitations under the License.
         }
 
         function changePreviewPage(delta) {
+            const source = sources.find(s => s.id === currentPreviewSourceId);
+            if (!source) return;
+
             const newIndex = currentPreviewIndex + delta;
-            if (newIndex >= 0 && newIndex < pdfJsDoc.numPages) {
+            if (newIndex >= 0 && newIndex < source.pageCount) {
                 currentPreviewIndex = newIndex;
-                renderPreviewCanvas(newIndex);
+                renderPreviewCanvas();
             }
         }
 
-        async function renderPreviewCanvas(index) {
+        async function renderPreviewCanvas() {
+            const source = sources.find(s => s.id === currentPreviewSourceId);
+            if (!source) return;
+
             els.previewSpinner.style.display = 'block';
-            els.previewPageNum.textContent = `(${index + 1} of ${pdfJsDoc.numPages})`;
+            els.previewPageNum.textContent = `(${currentPreviewIndex + 1} of ${source.pageCount})`;
             
-            const page = await pdfJsDoc.getPage(index + 1);
+            const page = await source.pdfJsDoc.getPage(currentPreviewIndex + 1);
             const scale = window.innerWidth > 1000 ? 1.5 : 1.0; 
             const viewport = page.getViewport({ scale: scale });
             const canvas = els.previewCanvas;
@@ -665,13 +722,17 @@ limitations under the License.
         }
 
         function resetApp() {
-            thumbnailBlobs.forEach(t => URL.revokeObjectURL(t.url));
-            thumbnailBlobs = [];
-            originalDocBytes = null;
-            originalPdfDoc = null;
-            pdfJsDoc = null;
+            if(!confirm('Reset everything? This will remove all loaded documents.')) return;
+            
+            // Cleanup memory
+            sources.forEach(s => {
+                Object.values(s.thumbnails).forEach(url => URL.revokeObjectURL(url));
+            });
+            sources = [];
             queue = [];
+            
             if(observer) observer.disconnect();
+            observer = null;
             
             els.sourceGrid.innerHTML = '';
             els.queueList.innerHTML = '';
@@ -689,7 +750,7 @@ limitations under the License.
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.0.2
+            v1.0.3beta
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
