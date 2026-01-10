@@ -711,17 +711,22 @@ limitations under the License.
                 onEnd: updateQueueFromDOM
             });
         }
+		
+		function updateQueueFromDOM() {
+    		// 1. Create a quick lookup map (O(N))
+    		const queueMap = new Map(queue.map(item => [item.id, item]));
+    		const newQueue = [];
+    
+    		// 2. Iterate DOM and look up directly (O(N))
+    		document.querySelectorAll('.queue-item').forEach(el => {
+        		const id = el.dataset.id;
+        		const item = queueMap.get(id); // Instant lookup
+        		if (item) newQueue.push(item);
+    		});
 
-        function updateQueueFromDOM() {
-            const newQueue = [];
-            document.querySelectorAll('.queue-item').forEach(el => {
-                const id = el.dataset.id;
-                const originalItem = queue.find(q => q.id === id);
-                if(originalItem) newQueue.push(originalItem);
-            });
-            queue = newQueue;
-            updateStats();
-        }
+    		queue = newQueue;
+    		updateStats();
+		}
 
         function updateStats() {
             const count = queue.length;
