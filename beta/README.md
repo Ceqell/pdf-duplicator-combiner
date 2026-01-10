@@ -3,7 +3,7 @@
 Beta channel. Expect bugs.
 
 ### Beta Features
-- \-
+- Nothing currently in development
 
 Simple, lightweight .pdf file page duplicator (and now combiner too!). No data is ever uploaded and is processed locally on device.
 
