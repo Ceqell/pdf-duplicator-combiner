@@ -5,6 +5,7 @@ Beta channel. Expect bugs.
 ### Beta Features
 - Ability to add multiple PDFs
 - Further optimizations
+- Improved custom confirmation prompts
 
 Simple, lightweight .pdf file page duplicator (and now combiner too!). No data is ever uploaded and is processed locally on device.
 
