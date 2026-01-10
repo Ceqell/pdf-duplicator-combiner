@@ -177,12 +177,6 @@ limitations under the License.
                 </div>
                 
                 <div class="flex gap-2">
-                    <!-- NEW BUTTON START -->
-                    <button onclick="document.getElementById('fileInput').click()" class="text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-slate-200">
-                        <i data-lucide="folder-plus" class="h-3.5 w-3.5"></i>
-                            Add PDF
-                    </button>
-                    <!-- NEW BUTTON END -->
                     <button onclick="toggleView()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded border border-transparent hover:border-slate-200 transition-colors" title="Toggle List/Grid View">
                         <i id="viewIcon" data-lucide="list" class="h-4 w-4"></i>
                     </button>
@@ -190,6 +184,12 @@ limitations under the License.
                         <i data-lucide="copy-plus" class="h-3.5 w-3.5"></i>
                         Add All
                     </button>
+                    <!-- NEW BUTTON START -->
+                    <button onclick="document.getElementById('fileInput').click()" class="text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-slate-200">
+                        <i data-lucide="folder-plus" class="h-3.5 w-3.5"></i>
+                            Add PDF
+                    </button>
+                    <!-- NEW BUTTON END -->
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
