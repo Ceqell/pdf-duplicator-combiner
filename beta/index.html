@@ -196,7 +196,8 @@ limitations under the License.
                 <div class="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 transition-all" id="sourceGrid"></div>
             </div>
             <button id="sourceScrollBtn" onclick="toggleScroll('source')" class="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur border border-slate-300 text-slate-600 p-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-95">
-                <i data-lucide="arrow-down" class="h-5 w-5" id="sourceScrollIcon"></i>
+                <span id="sourceScrollDown"><i data-lucide="arrow-down" class="h-5 w-5"></i></span>
+                <span id="sourceScrollUp" class="hidden"><i data-lucide="arrow-up" class="h-5 w-5"></i></span>
             </button>
         </div>
 
@@ -232,7 +233,8 @@ limitations under the License.
                 </div>
             </div>
             <button id="queueScrollBtn" onclick="toggleScroll('queue')" class="absolute bottom-16 right-4 md:bottom-4 z-20 bg-white/90 backdrop-blur border border-slate-300 text-slate-600 p-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-95">
-                <i data-lucide="arrow-down" class="h-5 w-5" id="queueScrollIcon"></i>
+                <span id="queueScrollDown"><i data-lucide="arrow-down" class="h-5 w-5"></i></span>
+                <span id="queueScrollUp" class="hidden"><i data-lucide="arrow-up" class="h-5 w-5"></i></span>
             </button>
         </div>
     </main>
@@ -912,14 +914,15 @@ limitations under the License.
         }
 
         function initScrollHandlers() {
-                    setupScrollLogic('sourceContainer', 'sourceScrollBtn', 'sourceScrollIcon');
-                    setupScrollLogic('queueContainer', 'queueScrollBtn', 'queueScrollIcon');
+                    setupScrollLogic('sourceContainer', 'sourceScrollBtn', 'sourceScrollDown', 'sourceScrollUp');
+                    setupScrollLogic('queueContainer', 'queueScrollBtn', 'queueScrollDown', 'queueScrollUp');
                 }
 
-        function setupScrollLogic(containerId, btnId, iconId) {
+        function setupScrollLogic(containerId, btnId, downId, upId) {
             const container = document.getElementById(containerId);
             const btn = document.getElementById(btnId);
-            const icon = document.getElementById(iconId);
+            const downSpan = document.getElementById(downId);
+            const upSpan = document.getElementById(upId);
 
             if (!container || !btn) return;
 
@@ -933,23 +936,22 @@ limitations under the License.
                 
                 btn.classList.remove('opacity-0', 'pointer-events-none');
 
-                // 2. Toggle Icon based on position
-                // If we are near the top, show DOWN arrow. Otherwise show UP.
+                // 2. Toggle Visibility based on position
                 const isNearTop = container.scrollTop < 50;
                 
-                // We assume 'arrow-down' is the default. We toggle to 'arrow-up' if not near top.
                 if (isNearTop) {
-                    icon.setAttribute('data-lucide', 'arrow-down');
+                    // Show Down, Hide Up
+                    downSpan.classList.remove('hidden');
+                    upSpan.classList.add('hidden');
                 } else {
-                    icon.setAttribute('data-lucide', 'arrow-up');
+                    // Hide Down, Show Up
+                    downSpan.classList.add('hidden');
+                    upSpan.classList.remove('hidden');
                 }
-                lucide.createIcons();
+                // No need to call lucide.createIcons() here anymore!
             };
 
-            // Listen for scroll
             container.addEventListener('scroll', () => requestAnimationFrame(updateState));
-            
-            // Listen for content changes (resize/add)
             new ResizeObserver(updateState).observe(container);
         }
 

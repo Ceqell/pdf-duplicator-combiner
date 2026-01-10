@@ -261,8 +261,17 @@
   .right-1 {
     right: calc(var(--spacing) * 1);
   }
+  .right-4 {
+    right: calc(var(--spacing) * 4);
+  }
   .bottom-0 {
     bottom: calc(var(--spacing) * 0);
+  }
+  .bottom-4 {
+    bottom: calc(var(--spacing) * 4);
+  }
+  .bottom-16 {
+    bottom: calc(var(--spacing) * 16);
   }
   .left-0 {
     left: calc(var(--spacing) * 0);
@@ -699,6 +708,9 @@
   .p-2 {
     padding: calc(var(--spacing) * 2);
   }
+  .p-2\.5 {
+    padding: calc(var(--spacing) * 2.5);
+  }
   .p-3 {
     padding: calc(var(--spacing) * 3);
   }
@@ -927,6 +939,11 @@
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
+  .backdrop-blur {
+    --tw-backdrop-blur: blur(8px);
+    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+  }
   .backdrop-blur-\[2px\] {
     --tw-backdrop-blur: blur(2px);
     -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
@@ -1004,6 +1021,16 @@
     &:is(:where(.group\/thumb):hover *) {
       @media (hover: hover) {
         display: flex;
+      }
+    }
+  }
+  .hover\:scale-110 {
+    &:hover {
+      @media (hover: hover) {
+        --tw-scale-x: 110%;
+        --tw-scale-y: 110%;
+        --tw-scale-z: 110%;
+        scale: var(--tw-scale-x) var(--tw-scale-y);
       }
     }
   }
@@ -1121,6 +1148,13 @@
       }
     }
   }
+  .hover\:text-blue-600 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-blue-600);
+      }
+    }
+  }
   .hover\:text-blue-800 {
     &:hover {
       @media (hover: hover) {
@@ -1187,6 +1221,11 @@
   .disabled\:bg-slate-300 {
     &:disabled {
       background-color: var(--color-slate-300);
+    }
+  }
+  .md\:bottom-4 {
+    @media (width >= 48rem) {
+      bottom: calc(var(--spacing) * 4);
     }
   }
   .md\:block {
