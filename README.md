@@ -17,4 +17,4 @@ Licensed under the Apache License Version 2.0. Learn more at the [LICENSE](https
 
 Link: https://ceqell.github.io/pdf-duplicator
 
-<sup>Beta version: https://ceqell.github.io/pdf-duplicator/beta</sup>
+<sup>Beta version: https://ceqell.github.io/pdf-duplicator/beta, [what's different?](https://github.com/Ceqell/pdf-duplicator/tree/main/beta)</sup>
