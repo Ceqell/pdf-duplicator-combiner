@@ -1,8 +1,9 @@
 # pdf-duplicator-combiner
 
-### Latest changelogs in 1.1.2
-- Added a togglable scroll to bottom/top button
-- Miscellaneous bug fixes
+### Latest changelogs in 1.1.0
+- Ability to add multiple PDFs
+- Further optimizations
+- Improved custom confirmation prompts
 
 Simple, lightweight .pdf file page duplicator and combiner. No data is ever uploaded and is processed locally on device.
 

@@ -3,7 +3,7 @@
 Beta channel. Expect bugs.
 
 ### Beta Features
-- Togglable scroll to top/bottom button
+- \-
 
 Simple, lightweight .pdf file page duplicator (and now combiner too!). No data is ever uploaded and is processed locally on device.
 
