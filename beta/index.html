@@ -597,10 +597,14 @@ limitations under the License.
             try {
                 const newDoc = await PDFDocument.create();
 
-				newDoc.setTitle(originalPdfDoc.getTitle() || '');
-				newDoc.setAuthor(originalPdfDoc.getAuthor() || '');
-				newDoc.setSubject(originalPdfDoc.getSubject() || '');
-				newDoc.setCreator(originalPdfDoc.getCreator() || '');
+				// Use the first document as the "master" for metadata
+				const masterDoc = sources[0]?.pdfDoc;
+					if (masterDoc) {
+    					newDoc.setTitle(masterDoc.getTitle() || '');
+    					newDoc.setAuthor(masterDoc.getAuthor() || '');
+    					newDoc.setSubject(masterDoc.getSubject() || '');
+    					newDoc.setCreator(masterDoc.getCreator() || '');
+					}
                 
                 // Group contiguous pages from the same source to optimize copying
                 // This is a big performance boost over copying one by one
