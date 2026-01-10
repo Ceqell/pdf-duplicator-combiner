@@ -306,6 +306,7 @@ limitations under the License.
             loadingText: document.getElementById('loadingText'),
             sourcePanel: document.getElementById('sourcePanel'),
             queuePanel: document.getElementById('queuePanel'),
+            queueContainer: document.getElementById('queueContainer'),
             sourceGrid: document.getElementById('sourceGrid'),
             queueList: document.getElementById('queueList'),
             emptyState: document.getElementById('emptyState'),
@@ -524,8 +525,7 @@ limitations under the License.
         async function addAllPages() {
             if (sources.length === 0) return;
             
-            // REMOVED: The confirm dialog that was blocking repeat clicks 
-            // if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
+            if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
 
             els.addAllBtn.disabled = true;
 			
