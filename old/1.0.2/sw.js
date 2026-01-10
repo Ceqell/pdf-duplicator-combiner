@@ -1,5 +1,5 @@
 // Change this version string whenever you update styles or JS!
-const CACHE_NAME = 'pdf-duplicator-v1.1.0';
+const CACHE_NAME = 'pdf-duplicator-v1.0.2';
 
 const ASSETS = [
   './',

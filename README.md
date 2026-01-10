@@ -1,20 +1,21 @@
-# pdf-duplicator
+# pdf-duplicator-combiner
 
-### Latest changelogs
-- Better viewing options
-- Improved performance, optimized some things
-- **Full** offline functionality
-- Fully stable
+### Latest changelogs in 1.1.0
+- Ability to add multiple PDFs
+- Further optimizations
+- Improved custom confirmation prompts
 
-Simple, lightweight .pdf file page duplicator. No data is ever uploaded and is processed locally on device.
+Simple, lightweight .pdf file page duplicator and combiner. No data is ever uploaded and is processed locally on device.
 
 How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator/discussions/1) [^disclaimer] [^2]
 
 [^disclaimer]: Fully offline capable. Installable as a PWA.
 [^2]: Beta branch: https://github.com/Ceqell/pdf-duplicator/tree/main/beta
 
-Licensed under the Apache License Version 2.0. Learn more at the [LICENSE](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file) file.
+Licensed under the Apache License Version 2.0. Learn more at [LICENSE.md](https://github.com/Ceqell/pdf-duplicator?tab=Apache-2.0-1-ov-file).
 
-Link: https://ceqell.github.io/pdf-duplicator
+Fully offline and runs/processes locally on device in your browser, for the latest release availiable for download go to https://github.com/Ceqell/pdf-duplicator/releases.
+
+Link: https://ceqell.github.io/pdf-duplicator/
 
 <sup>Beta version: https://ceqell.github.io/pdf-duplicator/beta, [what's different?](https://github.com/Ceqell/pdf-duplicator/tree/main/beta)</sup>

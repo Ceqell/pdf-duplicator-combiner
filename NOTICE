@@ -1,4 +1,4 @@
-pdf-duplicator
+pdf-duplicator-combiner
 Copyright 2026 Khonthee Jaroensiriphan
 
 This product includes software developed by Khonthee Jaroensiriphan 
@@ -26,6 +26,7 @@ This product includes/uses the following third-party software:
 4. Lucide Icons
    Copyright (c) 2025 Lucide Contributors & Copyright (c) 2013-2023 Cole Bemis
    Licensed under the ISC License & the MIT License (MIT) (for portions derived from Feather)
+   For more information, learn more at [lucidelicense.md](licenses/lucidelicense.md).
    https://lucide.dev/
 
 5. Tailwind CSS
