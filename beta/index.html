@@ -166,7 +166,7 @@ limitations under the License.
             </div>
         </div>
 
-        <div id="sourcePanel" class="hidden w-full md:w-7/12 lg:w-2/3 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100/50 flex flex-col h-[55%] md:h-full transition-opacity">
+        <div id="sourcePanel" class="hidden w-full md:w-7/12 lg:w-2/3 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-100/50 flex flex-col h-[55%] md:h-full transition-opacity relative group/panel">
             <div class="px-4 py-3 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-10 shadow-sm shrink-0">
                 <div class="flex items-center gap-3">
                     <h2 class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
@@ -195,6 +195,9 @@ limitations under the License.
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
                 <div class="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 transition-all" id="sourceGrid"></div>
             </div>
+            <button id="sourceScrollBtn" onclick="toggleScroll('source')" class="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur border border-slate-300 text-slate-600 p-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-95">
+                <i data-lucide="arrow-down" class="h-5 w-5" id="sourceScrollIcon"></i>
+            </button>
         </div>
 
         <div id="queuePanel" class="hidden w-full md:w-5/12 lg:w-1/3 bg-white flex flex-col h-[45%] md:h-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-xl z-20 relative">
@@ -228,6 +231,9 @@ limitations under the License.
                     <span id="totalNewPages" class="font-bold text-slate-900 text-base">0</span>
                 </div>
             </div>
+            <button id="queueScrollBtn" onclick="toggleScroll('queue')" class="absolute bottom-16 right-4 md:bottom-4 z-20 bg-white/90 backdrop-blur border border-slate-300 text-slate-600 p-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-95">
+                <i data-lucide="arrow-down" class="h-5 w-5" id="queueScrollIcon"></i>
+            </button>
         </div>
     </main>
 
@@ -419,6 +425,7 @@ limitations under the License.
             
             // Re-init sortable to include new items if needed (mostly valid for queue)
             initSortable();
+            initScrollHandlers();
             
             // Reset input so you can select the same file again if needed
             els.fileInput.value = '';
@@ -903,6 +910,61 @@ limitations under the License.
                 };
             });
         }
+
+        function initScrollHandlers() {
+                    setupScrollLogic('sourceContainer', 'sourceScrollBtn', 'sourceScrollIcon');
+                    setupScrollLogic('queueContainer', 'queueScrollBtn', 'queueScrollIcon');
+                }
+
+        function setupScrollLogic(containerId, btnId, iconId) {
+            const container = document.getElementById(containerId);
+            const btn = document.getElementById(btnId);
+            const icon = document.getElementById(iconId);
+
+            if (!container || !btn) return;
+
+            const updateState = () => {
+                // 1. Show button only if scrollable
+                const isScrollable = container.scrollHeight > container.clientHeight + 20; // +20 buffer
+                if (!isScrollable) {
+                    btn.classList.add('opacity-0', 'pointer-events-none');
+                    return;
+                }
+                
+                btn.classList.remove('opacity-0', 'pointer-events-none');
+
+                // 2. Toggle Icon based on position
+                // If we are near the top, show DOWN arrow. Otherwise show UP.
+                const isNearTop = container.scrollTop < 50;
+                
+                // We assume 'arrow-down' is the default. We toggle to 'arrow-up' if not near top.
+                if (isNearTop) {
+                    icon.setAttribute('data-lucide', 'arrow-down');
+                } else {
+                    icon.setAttribute('data-lucide', 'arrow-up');
+                }
+                lucide.createIcons();
+            };
+
+            // Listen for scroll
+            container.addEventListener('scroll', () => requestAnimationFrame(updateState));
+            
+            // Listen for content changes (resize/add)
+            new ResizeObserver(updateState).observe(container);
+        }
+
+        function toggleScroll(type) {
+            const container = document.getElementById(type === 'source' ? 'sourceContainer' : 'queueContainer');
+            if (!container) return;
+
+            const isNearTop = container.scrollTop < 50;
+
+            container.scrollTo({
+                top: isNearTop ? container.scrollHeight : 0,
+                behavior: 'smooth'
+            });
+        }
+
     </script>
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
