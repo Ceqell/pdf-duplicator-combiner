@@ -823,14 +823,14 @@ limitations under the License.
         }
 
         async function clearQueue() {
-            if(!await showConfirm('Clear all pages?')) return;
+            if(!await showConfirm('Clear all pages?', 'Clear All', true)) return;
             queue = [];
             els.queueList.innerHTML = '';
             updateStats();
         }
 
         async function resetApp() {
-            if(!await showConfirm('Reset everything? This will remove all loaded documents.')) return;
+            if(!await showConfirm('Reset everything? This will remove all loaded documents.', 'Reset App', true)) return;
             
             // Cleanup memory
             sources.forEach(s => {
@@ -878,7 +878,6 @@ limitations under the License.
 
                 // Show Modal
                 modal.classList.remove('hidden');
-                // Small delay to allow transition to trigger
                 requestAnimationFrame(() => {
                     modal.classList.add('modal-active');
                 });
@@ -889,13 +888,19 @@ limitations under the License.
                     setTimeout(() => modal.classList.add('hidden'), 200);
                     resolve(result);
             
-                    // Clean up listeners to prevent memory leaks or double-firing
+                    // Clean up listeners
                     cancelBtn.onclick = null;
                     okBtn.onclick = null;
+                    modal.onclick = null; // Clean up backdrop listener
                 };
 
                 cancelBtn.onclick = () => close(false);
                 okBtn.onclick = () => close(true);
+
+                // NEW: Close if clicking the background (backdrop)
+                modal.onclick = (e) => {
+                    if (e.target === modal) close(false);
+                };
             });
         }
     </script>
