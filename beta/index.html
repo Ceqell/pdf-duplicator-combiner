@@ -524,7 +524,8 @@ limitations under the License.
         async function addAllPages() {
             if (sources.length === 0) return;
             
-            if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
+            // REMOVED: The confirm dialog that was blocking repeat clicks 
+            // if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
 
             els.addAllBtn.disabled = true;
 			
