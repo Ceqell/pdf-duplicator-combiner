@@ -24,7 +24,7 @@ limitations under the License.
     <meta name="description" content="Duplicate and reorder PDF pages securely in your browser. No upload, no sign-up, works offline.">
     <meta name="theme-color" content="#2563eb">
 
-    <link href="styles.css?v=1.0.4beta" rel="stylesheet">
+    <link href="styles.css?v=1.0.5beta" rel="stylesheet">
     <script src="js/lucide.min.js"></script>
     <script src="js/pdf-lib.min.js"></script>
     <script src="js/pdf.min.js"></script>
@@ -163,6 +163,28 @@ limitations under the License.
                 <button onclick="changePreviewPage(1)" class="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors">
                     <i data-lucide="chevron-right" class="h-6 w-6"></i>
                 </button>
+            </div>
+        </div>
+
+        <div id="confirmModal" class="hidden fixed inset-0 z-[70] bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center modal-enter transition-all duration-200">
+            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 transform transition-all scale-100">
+                <div class="flex items-center gap-3 mb-4 text-slate-800">
+                    <div class="bg-blue-100 p-2 rounded-full text-blue-600">
+                        <i data-lucide="help-circle" class="h-6 w-6"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Confirm Action</h3>
+                </div>
+                <p id="confirmMessage" class="text-slate-600 text-sm mb-6 leading-relaxed">
+                    Are you sure you want to proceed?
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button id="confirmCancelBtn" class="px-4 py-2 text-slate-500 hover:bg-slate-100 font-medium rounded-lg transition-colors text-sm">
+                        Cancel
+                    </button>
+                    <button id="confirmOkBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors text-sm">
+                        Confirm
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -347,7 +369,7 @@ limitations under the License.
         async function handleFiles(files) {
 
             if (sources.length > 10) {
-                if(!confirm("Loading many large PDFs might slow down your browser. Continue?")) return;
+                if(!await showConfirm("Loading many large PDFs might slow down your browser. Continue?")) return;
             }
 
             if (!files || files.length === 0) return;
@@ -525,7 +547,7 @@ limitations under the License.
         async function addAllPages() {
             if (sources.length === 0) return;
             
-            if (!confirm(`Add all pages from ALL ${sources.length} documents?`)) return;
+            if (!await showConfirm(`Add all pages from ALL ${sources.length} documents?`)) return;
 
             els.addAllBtn.disabled = true;
 			
@@ -564,7 +586,7 @@ limitations under the License.
 			if(!source) return;
 
 			// Optional: Confirmation for large files only
-			if(source.pageCount > 50 && !confirm(`Add all ${source.pageCount} pages from "${source.name}"?`)) return;
+			if(source.pageCount > 50 && !await showConfirm(`Add all ${source.pageCount} pages from "${source.name}"?`)) return;
 
 			// Find the button to give visual feedback
 			// We use a safe selector to avoid errors
@@ -800,15 +822,15 @@ limitations under the License.
             els.emptyState.classList.toggle('hidden', count > 0);
         }
 
-        function clearQueue() {
-            if(!confirm('Clear all pages?')) return;
+        async function clearQueue() {
+            if(!await showConfirm('Clear all pages?')) return;
             queue = [];
             els.queueList.innerHTML = '';
             updateStats();
         }
 
-        function resetApp() {
-            if(!confirm('Reset everything? This will remove all loaded documents.')) return;
+        async function resetApp() {
+            if(!await showConfirm('Reset everything? This will remove all loaded documents.')) return;
             
             // Cleanup memory
             sources.forEach(s => {
@@ -832,11 +854,55 @@ limitations under the License.
             
             updateStats();
         }
+
+        // --- Custom Confirm Logic ---
+        function showConfirm(message, confirmButtonText = 'Confirm', isDestructive = false) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const msgEl = document.getElementById('confirmMessage');
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                const okBtn = document.getElementById('confirmOkBtn');
+
+                // Set content
+                msgEl.textContent = message;
+                okBtn.textContent = confirmButtonText;
+
+                // Styling for destructive actions (Reset/Clear)
+                if (isDestructive) {
+                    okBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    okBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                } else {
+                    okBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                    okBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }
+
+                // Show Modal
+                modal.classList.remove('hidden');
+                // Small delay to allow transition to trigger
+                requestAnimationFrame(() => {
+                    modal.classList.add('modal-active');
+                });
+
+                // Handlers
+                const close = (result) => {
+                    modal.classList.remove('modal-active');
+                    setTimeout(() => modal.classList.add('hidden'), 200);
+                    resolve(result);
+            
+                    // Clean up listeners to prevent memory leaks or double-firing
+                    cancelBtn.onclick = null;
+                    okBtn.onclick = null;
+                };
+
+                cancelBtn.onclick = () => close(false);
+                okBtn.onclick = () => close(true);
+            });
+        }
     </script>
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.0.4beta
+            v1.0.5beta
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
