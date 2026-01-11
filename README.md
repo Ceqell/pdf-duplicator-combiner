@@ -6,6 +6,8 @@
 
 Simple, lightweight .pdf file page duplicator and combiner. No data is ever uploaded and is processed locally on device.
 
+You can duplicate, reorder, combine and delete specific pages documents within to form a single document (e.g., repeating a form page 10 times).
+
 How it works: [View Discussion](https://github.com/Ceqell/pdf-duplicator-combiner/discussions/1) [^disclaimer] [^2]
 
 [^disclaimer]: Fully offline capable. Installable as a PWA.
