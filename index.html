@@ -126,25 +126,37 @@ limitations under the License.
 
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         
-        <div id="uploadOverlay" class="absolute inset-0 z-40 bg-slate-50 flex flex-col p-6 transition-opacity duration-300 overflow-y-auto">
-            <div class="max-w-md w-full text-center m-auto">
-                <div id="dropZone" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 md:p-12 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group">
-                    <div class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform">
-                        <i data-lucide="file-up" class="h-8 w-8"></i>
-                    </div>
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">Select PDF File(s)</h2>
-                    <p class="text-slate-500 text-sm mb-6">Documents are processed locally on your device. No data is ever uploaded.</p>
-                    <button class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all w-full md:w-auto">
-                        Browse Files
-                    </button>
-                    <input type="file" id="fileInput" accept="application/pdf" class="hidden" multiple>
+<div id="uploadOverlay" class="absolute inset-0 z-40 bg-slate-50 overflow-y-auto transition-opacity duration-300">
+    
+    <div class="min-h-full flex flex-col items-center justify-center p-6">
+        
+        <div class="max-w-md w-full text-center">
+            
+            <div id="dropZone" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 md:p-12 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group">
+                <div class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform">
+                    <i data-lucide="file-up" class="h-8 w-8"></i>
                 </div>
-                <div class="mt-8 text-xs text-slate-400 space-y-2">
-    				<p class="max-w-xs mx-auto leading-relaxed"> This <strong>free PDF combiner and duplicator</strong> runs entirely in your browser (Client-Side).<br>100% private & offline capable.</p>
-    				<p>Made and hosted for free at no additional cost.<br> <a href="https://github.com/Ceqell/pdf-duplicator-combiner" class="text-blue-600 hover:text-blue-800 underline transition-colors"> View Source on GitHub</a><br>Licensed under the Apache License 2.0</p>	
-				</div>
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">Select PDF File(s)</h2>
+                <p class="text-slate-500 text-sm mb-6">
+                    Documents are processed locally on your device. No data is ever uploaded.
+                </p>
+                <button class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all w-full md:w-auto">
+                    Browse Files
+                </button>
+                <input type="file" id="fileInput" accept="application/pdf" class="hidden" multiple>
             </div>
-        </div>
+
+            <div class="mt-8 text-xs text-slate-400 space-y-2">
+                <p class="max-w-xs mx-auto leading-relaxed">
+                    This <strong>free PDF combiner and duplicator</strong> runs entirely in your browser (Client-Side).<br>100% private & offline capable.
+                </p>
+                <p>
+                    Made and hosted for free at no additional cost.<a href="https://github.com/Ceqell/pdf-duplicator-combiner" class="text-blue-600 hover:text-blue-800 underline transition-colors"> View Source on GitHub</a><br>Licensed under the Apache License 2.0
+                </p>
+            </div>
+		</div>
+    </div>
+</div>
 
         <div id="loadingOverlay" class="hidden absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center">
             <div class="text-center">
@@ -997,6 +1009,7 @@ limitations under the License.
 
 </body>
 </html>
+
 
 
 
