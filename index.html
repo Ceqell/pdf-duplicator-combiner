@@ -30,7 +30,7 @@ limitations under the License.
     <link rel="apple-touch-icon" href="icon-192.png">
 	<link rel="icon" type="image/png" href="icon-192.png">
 	
-    <link href="styles.css?v=1.1.2-10" rel="stylesheet">
+    <link href="styles.css?v=1.1.2-11" rel="stylesheet">
     <script src="js/lucide.min.js"></script>
     <script src="js/pdf-lib.min.js"></script>
     <script src="js/pdf.min.js"></script>
@@ -126,8 +126,8 @@ limitations under the License.
 
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         
-        <div id="uploadOverlay" class="absolute inset-0 z-40 bg-slate-50 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
-            <div class="max-w-md w-full text-center">
+        <div id="uploadOverlay" class="absolute inset-0 z-40 bg-slate-50 flex flex-col p-6 transition-opacity duration-300 overflow-y-auto">
+            <div class="max-w-md w-full text-center m-auto">
                 <div id="dropZone" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 md:p-12 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group">
                     <div class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform">
                         <i data-lucide="file-up" class="h-8 w-8"></i>
@@ -140,7 +140,7 @@ limitations under the License.
                     <input type="file" id="fileInput" accept="application/pdf" class="hidden" multiple>
                 </div>
                 <div class="mt-8 text-xs text-slate-400 space-y-2">
-    				<p class="max-w-xs mx-auto leading-relaxed"> This <strong>free PDF combiner and duplicator</strong> runs entirely in your browser (Client-Side). 100% private & offline capable.</p>
+    				<p class="max-w-xs mx-auto leading-relaxed"> This <strong>free PDF combiner and duplicator</strong> runs entirely in your browser (Client-Side).<br>100% private & offline capable.</p>
     				<p>Made and hosted for free at no additional cost.<br> <a href="https://github.com/Ceqell/pdf-duplicator-combiner" class="text-blue-600 hover:text-blue-800 underline transition-colors"> View Source on GitHub</a><br>Licensed under the Apache License 2.0</p>	
 				</div>
             </div>
@@ -997,6 +997,7 @@ limitations under the License.
 
 </body>
 </html>
+
 
 
 
