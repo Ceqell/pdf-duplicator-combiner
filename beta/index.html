@@ -105,16 +105,16 @@ limitations under the License.
                 </div>
             </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar max-w-[60vw] md:max-w-none ml-auto">
              <button onclick="resetApp()" class="hidden text-sm font-medium text-slate-500 hover:text-red-600 px-3 py-2 transition-colors" id="resetBtn">
                 Reset
             </button>
-            <button id="downloadZipBtn" onclick="downloadAllAsImages(this)" disabled class="group flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base disabled:bg-slate-300 disabled:cursor-not-allowed disabled:text-white disabled:border-slate-300">
+            <button id="downloadZipBtn" onclick="downloadAllAsImages(this)" disabled class="group flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base disabled:bg-slate-300 disabled:cursor-not-allowed disabled:text-white disabled:border-slate-300 w-auto md:w-60 justify-center whitespace-nowrap">
                 <i data-lucide="images" class="h-4 w-4 text-purple-600 group-disabled:text-white"></i>
                 <span class="hidden md:inline">Download as JPG (ZIP)</span>
                 <span class="md:hidden">ZIP</span>
             </button>
-            <button id="downloadBtn" onclick="downloadPDF()" disabled class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base">
+            <button id="downloadBtn" onclick="downloadPDF()" disabled class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base w-auto md:w-45 justify-center whitespace-nowrap">
                 <i data-lucide="download" class="h-4 w-4"></i>
                 <span class="hidden md:inline">Download PDF</span>
                 <span class="md:hidden">Save</span>
@@ -183,7 +183,7 @@ limitations under the License.
                 </div>
                 
                 <div class="flex gap-2">
-                    <button onclick="toggleView()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded border border-transparent hover:border-slate-200 transition-colors" title="Toggle List/Grid View">
+                    <button onclick="toggleView()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded border border-transparent hover:border-slate-200 transition-colors" aria-label="Toggle grid or list view" title="Toggle List/Grid View">
                         <i id="viewIcon" data-lucide="list" class="h-4 w-4"></i>
                     </button>
                     <button id="addAllBtn" onclick="addAllPages()" class="text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 border border-blue-100">
@@ -199,7 +199,7 @@ limitations under the License.
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
-                <div class="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 transition-all" id="sourceGrid"></div>
+                <div class="grid grid-cols-1 list-view gap-3 md:gap-4 transition-all" id="sourceGrid"></div>
             </div>
             <button id="sourceScrollBtn" onclick="toggleScroll('source')" class="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur border border-slate-300 text-slate-600 p-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:scale-110 active:scale-95">
                 <span id="sourceScrollDown"><i data-lucide="arrow-down" class="h-5 w-5"></i></span>
@@ -264,11 +264,11 @@ limitations under the License.
             </div>
 
             <div class="controls flex gap-1 h-7">
-                <input type="number" min="1" max="99" value="1" class="w-12 text-center text-xs border border-slate-200 rounded focus:border-blue-500 outline-none copies-input bg-slate-50" onclick="event.stopPropagation()">
-                <button class="download-page-btn bg-green-600 text-white px-2 rounded hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center" title="Save this page as Image">
+                <input type="number" min="1" max="99" value="1" class="w-10 text-center text-xs border border-slate-200 rounded focus:border-blue-500 outline-none copies-input bg-slate-50" onclick="event.stopPropagation()">
+                <button class="download-page-btn bg-green-600 text-white px-1.5 rounded hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center" title="Save this page as Image">
                     <i data-lucide="image" class="h-3 w-3"></i> 
                 </button>
-                <button class="bg-blue-600 text-white px-2 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors add-btn flex items-center justify-center">
+                <button class="add-btn flex-1 bg-blue-600 text-white px-1.5 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center">
                     <i data-lucide="plus" class="h-3 w-3"></i>
                 </button>
             </div>
@@ -291,7 +291,7 @@ limitations under the License.
                 <div class="text-xs font-bold text-slate-700">Page <span class="origin-num"></span></div>
                 <div class="text-[10px] text-slate-400 truncate file-name">Original PDF</div>
             </div>
-            <button class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors remove-btn">
+            <button aria-label="Remove page from layout" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors remove-btn">
                 <i data-lucide="x" class="h-4 w-4"></i>
             </button>
         </div>
@@ -334,7 +334,7 @@ limitations under the License.
         let currentPreviewIndex = 0;
         let currentPreviewSourceId = null;
         let observer = null;
-        let isListView = false;
+        let isListView = true;
 
         // Elements
         const els = {
@@ -449,16 +449,26 @@ limitations under the License.
 
         function toggleView() {
             isListView = !isListView;
+            // 1. Find the current icon (the SVG that Lucide created)
+            // We look inside the button that calls this function
+            const btn = document.querySelector('button[onclick="toggleView()"]');
+            const icon = btn.querySelector('svg') || btn.querySelector('i');
+
             if (isListView) {
                 els.sourceGrid.classList.remove('grid-cols-3', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5');
                 els.sourceGrid.classList.add('grid-cols-1', 'list-view');
-                els.viewIcon.setAttribute('data-lucide', 'grid');
+                // els.viewIcon.setAttribute('data-lucide', 'grid');
+                icon.setAttribute('data-lucide', 'list');
             } else {
                 els.sourceGrid.classList.remove('grid-cols-1', 'list-view');
                 els.sourceGrid.classList.add('grid-cols-3', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5');
-                els.viewIcon.setAttribute('data-lucide', 'list');
+                // els.viewIcon.setAttribute('data-lucide', 'list');
+                icon.setAttribute('data-lucide', 'layout-grid');
             }
-            lucide.createIcons();
+            // 2. Tell Lucide to re-render just this one icon
+            lucide.createIcons({
+                root: btn // Only scan inside this button for performance
+            });
         }
 
         async function renderSourceToGrid(source) {
@@ -551,7 +561,8 @@ limitations under the License.
                                 const url = URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.download = `${source.name}_page_${i}.jpg`;
+                                const cleanName = source.name.replace(/\.pdf$/i, ''); // Removes .pdf or .PDF
+                                link.download = `${cleanName}_page_${i}.jpg`;
                                 document.body.appendChild(link);
                                 link.click();
                                 link.remove();
@@ -1054,7 +1065,7 @@ limitations under the License.
                     const source = sources.find(s => s.id === item.sourceId);
             
                     // Update status text
-                    btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4"></div> <span class="text-xs">Page ${i + 1}/${queue.length}</span>`;
+                    btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4 shrink-0"></div> <span class="text-xs">Page ${i + 1}/${queue.length}</span>`;
 
                     // Standard quality is enough for most (1.5)
                     const page = await source.pdfJsDoc.getPage(item.pageIndex + 1);
@@ -1071,7 +1082,7 @@ limitations under the License.
                     zip.file(`Page-${i + 1}.jpg`, blob);
                 }
 
-                btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4"></div> <span class="text-xs">Zipping...</span>`;
+                btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4 shrink-0"></div> <span class="text-xs">Zipping...</span>`;
         
                 const content = await zip.generateAsync({ type: "blob" });
                 const url = URL.createObjectURL(content);
@@ -1097,7 +1108,7 @@ limitations under the License.
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.1.6-2beta
+            v1.1.3-5beta
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
