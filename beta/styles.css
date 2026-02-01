@@ -1039,6 +1039,11 @@
       }
     }
   }
+  .group-disabled\:text-white {
+    &:is(:where(.group):disabled *) {
+      color: var(--color-white);
+    }
+  }
   .hover\:scale-110 {
     &:hover {
       @media (hover: hover) {
@@ -1252,9 +1257,19 @@
       cursor: not-allowed;
     }
   }
+  .disabled\:border-slate-300 {
+    &:disabled {
+      border-color: var(--color-slate-300);
+    }
+  }
   .disabled\:bg-slate-300 {
     &:disabled {
       background-color: var(--color-slate-300);
+    }
+  }
+  .disabled\:text-white {
+    &:disabled {
+      color: var(--color-white);
     }
   }
   .md\:bottom-\[100px\] {

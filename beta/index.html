@@ -109,8 +109,8 @@ limitations under the License.
              <button onclick="resetApp()" class="hidden text-sm font-medium text-slate-500 hover:text-red-600 px-3 py-2 transition-colors" id="resetBtn">
                 Reset
             </button>
-            <button onclick="downloadAllAsImages(this)" class="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base">
-                <i data-lucide="images" class="h-4 w-4 text-purple-600"></i>
+            <button id="downloadZipBtn" onclick="downloadAllAsImages(this)" disabled class="group flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base disabled:bg-slate-300 disabled:cursor-not-allowed disabled:text-white disabled:border-slate-300">
+                <i data-lucide="images" class="h-4 w-4 text-purple-600 group-disabled:text-white"></i>
                 <span class="hidden md:inline">Download as JPG (ZIP)</span>
                 <span class="md:hidden">ZIP</span>
             </button>
@@ -882,8 +882,19 @@ limitations under the License.
 
         function updateStats() {
             const count = queue.length;
+            // 1. Update text counter
             els.totalNewPages.textContent = count;
+    
+            // 2. Toggle Blue "Download PDF" Button
             els.downloadBtn.disabled = count === 0;
+
+            // 3. Toggle White "Save Images" Button (NEW)
+            const zipBtn = document.getElementById('downloadZipBtn');
+            if (zipBtn) {
+                zipBtn.disabled = count === 0;
+            }
+
+            // 4. Toggle Empty State Image
             els.emptyState.classList.toggle('hidden', count > 0);
         }
 
@@ -1086,7 +1097,7 @@ limitations under the License.
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.1.5beta
+            v1.1.6-2beta
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">
