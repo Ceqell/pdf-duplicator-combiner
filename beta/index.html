@@ -109,6 +109,11 @@ limitations under the License.
              <button onclick="resetApp()" class="hidden text-sm font-medium text-slate-500 hover:text-red-600 px-3 py-2 transition-colors" id="resetBtn">
                 Reset
             </button>
+            <button onclick="downloadAllAsImages(this)" class="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base">
+                <i data-lucide="images" class="h-4 w-4 text-purple-600"></i>
+                <span class="hidden md:inline">Download as JPG (ZIP)</span>
+                <span class="md:hidden">ZIP</span>
+            </button>
             <button id="downloadBtn" onclick="downloadPDF()" disabled class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm active:scale-95 text-sm md:text-base">
                 <i data-lucide="download" class="h-4 w-4"></i>
                 <span class="hidden md:inline">Download PDF</span>
@@ -191,7 +196,6 @@ limitations under the License.
                             Add PDF
                     </button>
                     <!-- NEW BUTTON END -->
-                     <button onclick="downloadAllAsImages(this)" ... >Download Images (ZIP)</button>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
@@ -524,7 +528,7 @@ limitations under the License.
                         e.stopPropagation();
     
                         // Visual feedback (optional)
-                        const icon = downloadBtn.querySelector('i');
+                        const icon = downloadBtn.querySelector('svg');
                         icon.classList.add('opacity-50'); 
 
                         try {
@@ -1019,54 +1023,50 @@ limitations under the License.
             });
         }
 
-        async function downloadAllAsImages() {
+        async function downloadAllAsImages(btnElement) {
             if (queue.length === 0) return alert("Add pages to the layout first!");
 
-            const zip = new JSZip(); // Initialize ZIP
-            const btn = event.currentTarget; // Get button to show loading state
-            const originalText = btn.innerText;
-            btn.innerText = "Rendering...";
+            const zip = new JSZip();
+            // Use the passed button element (this)
+            const btn = btnElement; 
+    
+            // Save original content (icon + text) to restore later
+            const originalContent = btn.innerHTML;
+    
+            // Visual Feedback
+            btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4"></div> <span class="text-xs">Processing...</span>`;
             btn.disabled = true;
 
             try {
-                // Loop through the queue
                 for (let i = 0; i < queue.length; i++) {
                     const item = queue[i];
                     const source = sources.find(s => s.id === item.sourceId);
             
-                    // Get the page from PDF.js (for rendering)
+                    // Update status text
+                    btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4"></div> <span class="text-xs">Page ${i + 1}/${queue.length}</span>`;
+
+                    // Standard quality is enough for most (1.5)
                     const page = await source.pdfJsDoc.getPage(item.pageIndex + 1);
+                    const viewport = page.getViewport({ scale: 1.5 });
             
-                    // Set scale (2.0 = high quality, 1.0 = standard)
-                    const viewport = page.getViewport({ scale: 2.0 });
-            
-                    // Create a temporary canvas
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
 
-                    // Render page to canvas
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-                    // Convert canvas to Blob (JPG)
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-            
-                    // Add to ZIP folder
-                    zip.file(`page-${i + 1}.jpg`, blob);
-            
-                    // Update button text to show progress
-                    btn.innerText = `Rendering ${i + 1}/${queue.length}`;
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                    zip.file(`Page-${i + 1}.jpg`, blob);
                 }
 
-                btn.innerText = "Zipping...";
+                btn.innerHTML = `<div class="spinner border-t-purple-600 border-slate-300 w-4 h-4"></div> <span class="text-xs">Zipping...</span>`;
         
-                // Generate and download the ZIP file
                 const content = await zip.generateAsync({ type: "blob" });
                 const url = URL.createObjectURL(content);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = "combined_images.zip";
+                link.download = "images-bundle.zip";
                 link.click();
                 URL.revokeObjectURL(url);
 
@@ -1074,8 +1074,11 @@ limitations under the License.
                 console.error(err);
                 alert("Error creating images: " + err.message);
             } finally {
-                btn.innerText = originalText;
+                // Restore original button look
+                btn.innerHTML = originalContent;
                 btn.disabled = false;
+                // Re-render the icon inside the button
+                lucide.createIcons(); 
             }
         }
 
