@@ -29,6 +29,7 @@ limitations under the License.
     <script src="js/pdf-lib.min.js"></script>
     <script src="js/pdf.min.js"></script>
     <script src="js/Sortable.min.js"></script>
+    <script src="js/jszip.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -190,6 +191,7 @@ limitations under the License.
                             Add PDF
                     </button>
                     <!-- NEW BUTTON END -->
+                     <button onclick="downloadAllAsImages(this)" ... >Download Images (ZIP)</button>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4" id="sourceContainer">
@@ -259,6 +261,9 @@ limitations under the License.
 
             <div class="controls flex gap-1 h-7">
                 <input type="number" min="1" max="99" value="1" class="w-12 text-center text-xs border border-slate-200 rounded focus:border-blue-500 outline-none copies-input bg-slate-50" onclick="event.stopPropagation()">
+                <button class="download-page-btn bg-green-600 text-white px-2 rounded hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center" title="Save this page as Image">
+                    <i data-lucide="image" class="h-3 w-3"></i> 
+                </button>
                 <button class="bg-blue-600 text-white px-2 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors add-btn flex items-center justify-center">
                     <i data-lucide="plus" class="h-3 w-3"></i>
                 </button>
@@ -455,6 +460,7 @@ limitations under the License.
         async function renderSourceToGrid(source) {
             // Add a Header for this file
             const header = document.createElement('div');
+
             // Updated Header Styling: Flex container with space-between
             header.className = 'col-span-full flex justify-between items-center gap-2 py-2 px-3 mt-4 border-b border-slate-200 bg-slate-50 rounded-t-lg';
 
@@ -510,6 +516,52 @@ limitations under the License.
                 
                 pageNum.textContent = i;
                 pageNumText.textContent = i;
+
+                const downloadBtn = template.querySelector('.download-page-btn');
+
+                // Add the click handler
+                    downloadBtn.onclick = async (e) => {
+                        e.stopPropagation();
+    
+                        // Visual feedback (optional)
+                        const icon = downloadBtn.querySelector('i');
+                        icon.classList.add('opacity-50'); 
+
+                        try {
+                            // 1. Get the page from PDF.js
+                            const page = await source.pdfJsDoc.getPage(pageIndex + 1);
+        
+                            // 2. Set scale (1.5 for decent quality, 2.0 for high quality)
+                            const viewport = page.getViewport({ scale: 1.5 });
+        
+                            // 3. Render to an invisible canvas
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                            // 4. Convert to Blob and Download
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${source.name}_page_${i}.jpg`;
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                URL.revokeObjectURL(url);
+            
+                                // Restore icon opacity
+                                icon.classList.remove('opacity-50');
+                            }, 'image/jpeg', 0.9); // 0.9 = 90% quality
+
+                        } catch (err) {
+                            console.error(err);
+                            alert("Error saving image.");
+                        }
+                    };
                 
                 const add = () => {
                     const count = parseInt(input.value) || 1;
@@ -967,11 +1019,71 @@ limitations under the License.
             });
         }
 
+        async function downloadAllAsImages() {
+            if (queue.length === 0) return alert("Add pages to the layout first!");
+
+            const zip = new JSZip(); // Initialize ZIP
+            const btn = event.currentTarget; // Get button to show loading state
+            const originalText = btn.innerText;
+            btn.innerText = "Rendering...";
+            btn.disabled = true;
+
+            try {
+                // Loop through the queue
+                for (let i = 0; i < queue.length; i++) {
+                    const item = queue[i];
+                    const source = sources.find(s => s.id === item.sourceId);
+            
+                    // Get the page from PDF.js (for rendering)
+                    const page = await source.pdfJsDoc.getPage(item.pageIndex + 1);
+            
+                    // Set scale (2.0 = high quality, 1.0 = standard)
+                    const viewport = page.getViewport({ scale: 2.0 });
+            
+                    // Create a temporary canvas
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    // Render page to canvas
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    // Convert canvas to Blob (JPG)
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            
+                    // Add to ZIP folder
+                    zip.file(`page-${i + 1}.jpg`, blob);
+            
+                    // Update button text to show progress
+                    btn.innerText = `Rendering ${i + 1}/${queue.length}`;
+                }
+
+                btn.innerText = "Zipping...";
+        
+                // Generate and download the ZIP file
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = URL.createObjectURL(content);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "combined_images.zip";
+                link.click();
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                console.error(err);
+                alert("Error creating images: " + err.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
     </script>
 
     <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-between items-end pointer-events-none text-xs text-gray-400 font-mono z-50">
         <div class="pointer-events-auto">
-            v1.1.2beta
+            v1.1.5beta
         </div>
         
         <div class="pointer-events-auto bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-gray-200 shadow-sm">

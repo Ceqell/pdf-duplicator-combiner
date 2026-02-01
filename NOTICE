@@ -37,3 +37,9 @@ This product includes/uses the following third-party software:
 6. Inter Font
    Copyright (c) 2016 The Inter Project Authors
    Licensed under the SIL Open Font License, Version 1.1
+   https://github.com/rsms/inter
+
+7. JSZip
+   Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+   Licensed under the MIT License
+   https://github.com/Stuk/jszip
