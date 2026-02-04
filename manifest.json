@@ -5,6 +5,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
+  "webStoreAppId": "web-store-0038304f-a21f-4703-93f0-3dfdcdd703a8",
   "icons": [
     {
       "src": "icon-192.png",
